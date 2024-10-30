@@ -1,5 +1,7 @@
 #!/bin/bash
 
+script_dir=$PWD/$0
+echo "$script_dir"
 cd $PWD/build
 cmake ..
 make && make install
