@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.5)
 
 # Add subdirectories for each library
 add_subdirectory(IO)
@@ -10,7 +10,7 @@ set(SOURCE_FILES main.cpp)
 add_executable(qm ${SOURCE_FILES})
 
 # Include directories for all libraries
-target_include_directories(qm PRIVATE ${CMAKE_SOURCE_DIR}/includes)
+target_include_directories(qm PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 # Link statically to the libraries
-target_link_libraries(qm PRIVATE libQM libIO)
+target_link_libraries(qm PRIVATE QM IO)

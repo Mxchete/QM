@@ -18,7 +18,9 @@ class BlifReader
   BlifReader(bool graceful_err) : graceful_err_(graceful_err)
   {
   }
-  ~BlifReader();
+  ~BlifReader()
+  {
+  }
   bool read_file(std::string &filename);
   std::shared_ptr<QM::LiteralMap> get_map();
 
