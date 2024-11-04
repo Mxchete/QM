@@ -3,7 +3,7 @@
 #include <iostream>
 #include <memory>
 #include "IO/blif_reader.hpp"
-#include "QM/literal_map.hpp"
+#include "QM/minterm_map.hpp"
 
 char* get_arg(char** begin, char** end, const std::string& option)
 {
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     IO::File::BlifReader file_reader(false);
     file_reader.read_file(file_name);
 
-    std::shared_ptr<QM::LiteralMap> map = file_reader.get_map();
+    std::shared_ptr<QM::MintermMap> map = file_reader.get_map();
     return EXIT_SUCCESS;
   }
 }
