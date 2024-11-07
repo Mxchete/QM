@@ -2,8 +2,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
-#include "IO/blif_reader.hpp"
+#include "IO/file_reader.hpp"
+#include "IO/file_reader_factory.hpp"
 #include "QM/minterm_map.hpp"
+// #include "QM/qm_process_handler.hpp"
 
 char* get_arg(char** begin, char** end, const std::string& option)
 {
@@ -37,10 +39,10 @@ int main(int argc, char** argv)
   if (filename)
   {
     std::string file_name = argv[2];
-    IO::File::BlifReader file_reader(false);
-    file_reader.read_file(file_name);
+    auto file_reader = IO::File::FileReaderFactory<QM::MintermMap>::create(file_name);
 
-    std::shared_ptr<QM::MintermMap> map = file_reader.get_map();
+    std::vector<QM::MintermMap> map = file_reader->read_file();
+    // QM::QMProcessHandler qm_processor(map);
     return EXIT_SUCCESS;
   }
 }

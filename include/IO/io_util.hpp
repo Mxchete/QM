@@ -1,5 +1,8 @@
 #include <string>
 
+#ifndef IO_UTIL_HPP_
+#define IO_UTIL_HPP_
+
 namespace IO
 {
 class IOUtil
@@ -12,7 +15,14 @@ class IOUtil
     other
   };
 
-  static inline FileType get_filetype(std::string& filename)
+  enum Error
+  {
+    bad_filetype,
+    unexpected_eof,
+    malformed_file
+  };
+
+  static inline FileType get_filetype(const std::string& filename)
   {
     std::string ext = filename.substr(filename.find_last_of(".") + 1);
     if (ext == "blif")
@@ -28,5 +38,11 @@ class IOUtil
       return FileType::other;
     }
   }
+
+  static void error_handler(Error e)
+  {
+  }
 };
 }  // namespace IO
+
+#endif

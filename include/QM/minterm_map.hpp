@@ -1,18 +1,19 @@
+#ifndef QM_MINTERM_MAP_
+#define QM_MINTERM_MAP_
+
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <unordered_set>
 #include <vector>
-
-#ifndef QM_MINTERM_MAP_
-#define QM_MINTERM_MAP_
 
 namespace QM
 {
 class MintermMap
 {
  public:
-  MintermMap(std::vector<char>& input, char output) : input_(input), output_(output)
+  MintermMap(std::vector<std::string>& input, std::string& output) : input_(input), output_(output)
   {
   }
 
@@ -32,12 +33,22 @@ class MintermMap
     return std::make_shared<std::unordered_set<uint64_t>>(map_);
   }
 
+  inline std::vector<std::string> inputs()
+  {
+    return input_;
+  }
+
+  inline std::string output()
+  {
+    return output_;
+  }
+
  private:
   uint64_t num_terms_;
-  std::vector<char> input_;
-  char output_;
+  std::vector<std::string> input_;
+  std::string output_;
   std::unordered_set<uint64_t> map_;
 };
 }  // namespace QM
 
-#endif  // QM_LITERAL_MAP_grep -q -i avx2 /proc/cpuinfo && echo true
+#endif  // QM_LITERAL_MAP_
