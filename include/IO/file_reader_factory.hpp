@@ -1,3 +1,6 @@
+#ifndef FILE_READER_FACTORY_HPP_
+#define FILE_READER_FACTORY_HPP_
+
 #include "IO/blif_reader.hpp"
 #include "IO/file_reader.hpp"
 #include "IO/io_util.hpp"
@@ -32,3 +35,5 @@ class FileReaderFactory
 };
 }  // namespace File
 }  // namespace IO
+
+#endif

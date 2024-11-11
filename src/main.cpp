@@ -4,8 +4,9 @@
 #include <memory>
 #include "IO/file_reader.hpp"
 #include "IO/file_reader_factory.hpp"
+#include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"
-// #include "QM/qm_process_handler.hpp"
+#include "QM/qm_process_handler.hpp"
 
 char* get_arg(char** begin, char** end, const std::string& option)
 {
@@ -39,10 +40,14 @@ int main(int argc, char** argv)
   if (filename)
   {
     std::string file_name = argv[2];
-    auto file_reader = IO::File::FileReaderFactory<QM::MintermMap>::create(file_name);
+    auto file_reader = IO::File::FileReaderFactory<QM::MintermDCMap>::create(file_name);
 
-    std::vector<QM::MintermMap> map = file_reader->read_file();
-    // QM::QMProcessHandler qm_processor(map);
+    std::cout << "Created file" << std::endl;
+
+    QM::MintermDCMap map(file_reader->read_file());
+    QM::QMProcessHandler qm_processor(map);
+
+    QM::MintermMap final_product(qm_processor.process());
     return EXIT_SUCCESS;
   }
 }

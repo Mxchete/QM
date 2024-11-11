@@ -1,20 +1,25 @@
 #include <stdlib.h>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include "IO/file_reader.hpp"
+#include "IO/io_util.hpp"
+#include "QM/QMUtil.hpp"
+#include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"
 
 namespace IO
 {
 namespace File
 {
-class PlaReader : FileReader<QM::MintermMap>
+class PlaReader : public FileReader<QM::MintermDCMap>
 {
  public:
-  explicit PlaReader(const std::string& filename) : FileReader<QM::MintermMap>(filename)
+  explicit PlaReader(const std::string& filename) : FileReader<QM::MintermDCMap>(filename)
   {
   }
 
@@ -24,6 +29,7 @@ class PlaReader : FileReader<QM::MintermMap>
     std::istringstream iss(line);
     std::string token;
     iss >> token;
+    bool success = true;
 
     if (token[0] == '#')
     {
@@ -33,42 +39,100 @@ class PlaReader : FileReader<QM::MintermMap>
     if (token == ".i")
     {
       std::string input;
+      iss >> input;
+      num_inputs_ = std::stoi(input);
+      std::cout << "num_inputs_: " << input << std::endl;
+    }
+    else if (token == ".ilb")
+    {
+      input_labels_provided_ = true;
+      std::string input;
+      iss >> input;
       while (iss >> input)
       {
-        top_level_inputs.push_back(input);
-        is_top_level_input[input] = true;
+        input_labels_.push_back(input);
       }
+      minterm_dc_map_.add_inputs(input_labels_);
     }
-    if (token == ".o")
+    else if (token == ".ob")
+    {
+      output_labels_provided_ = true;
+      std::string output;
+      iss >> output;
+      minterm_dc_map_.add_output(output);
+    }
+    else if (token == ".o")
     {
       std::string output;
       iss >> output;
+      uint64_t num_output = std::stoi(output);
     }
     else if (token == ".p")
     {
       std::string val;
       iss >> val;
-      num_product_terms_ = stoi(val);
+      num_product_terms_ = std::stoi(val);
     }
-    else if (token == ".end")
+    else if (token == ".e")
     {
       return false;  // Signal to stop processing
     }
+    else if (token != "")
+    {
+      if (num_inputs_ == 0)
+      {
+        IOUtil::error_handler(IOUtil::Error::malformed_file);
+      }
+      std::string term = token;
+      std::string out;
+      iss >> out;
+      std::vector<uint64_t> processed_term_list = QM::QMUtil::termtoveci(term);
+      QM::QMUtil::States which_map = QM::QMUtil::get_state(out[0]);
+      if (which_map == QM::QMUtil::States::one)
+      {
+        minterm_dc_map_.add_minterm(processed_term_list);
+      }
+      else if (which_map == QM::QMUtil::States::dc)
+      {
+        minterm_dc_map_.add_dc_term(processed_term_list);
+      }
+      else
+      {
+        IOUtil::error_handler(IOUtil::Error::malformed_file);
+      }
+      received_ += 1;
+    }
 
-    return true;  // Continue processing
+    return success;
   }
 
-  std::vector<QM::MintermMap> process() override
+  QM::MintermDCMap process() override
   {
-    return expandAllMinterms();
+    if (!input_labels_provided_)
+    {
+      for (int i = 0; i < num_inputs_; i++)
+      {
+        input_labels_.push_back(std::to_string(i));
+      }
+      minterm_dc_map_.add_inputs(input_labels_);
+    }
+    if (!output_labels_provided_)
+    {
+      minterm_dc_map_.add_output("1");
+    }
+    return minterm_dc_map_;
   }
 
  private:
-  std::vector<std::string> top_level_inputs;
-  std::unordered_map<std::string, bool> is_top_level_input;
-  std::unordered_map<std::string, std::vector<QM::MintermMap>> name_blocks;
+  std::vector<std::string> input_labels_;
+  QM::MintermDCMap minterm_dc_map_;
   std::string current_token_;
-  uint64_t num_product_terms_;
+  std::string output_;
+  uint64_t num_product_terms_ = 0;
+  uint64_t num_inputs_;
+  uint64_t received_ = 0;
+  bool input_labels_provided_ = false;
+  bool output_labels_provided_ = false;
 
   void process_subcircuit(const std::string& firstLine)
   {
@@ -92,59 +156,10 @@ class PlaReader : FileReader<QM::MintermMap>
       std::istringstream mintermStream(line);
       std::string inputPattern, outputValue;
       mintermStream >> inputPattern >> outputValue;
-      local_minterms.push_back({inputs, inputPattern, output, outputValue});
+      local_minterms.push_back({inputs, output});
     }
 
-    name_blocks[output] = local_minterms;
-  }
-
-  std::vector<QM::MintermMap> expandAllMinterms()
-  {
-    std::vector<QM::MintermMap> expandedMinterms;
-    for (const auto& [output, minterms] : name_blocks)
-    {
-      expandMinterms(output, expandedMinterms);
-    }
-    return expandedMinterms;
-  }
-
-  void expandMinterms(const std::string& output, std::vector<QM::MintermMap>& expandedMinterms)
-  {
-    if (is_top_level_input[output]) return;
-
-    for (auto& minterm : name_blocks[output])
-    {
-      if (usesOnlyCircuitInputs(minterm.inputs()))
-      {
-        expandedMinterms.push_back(minterm);
-      }
-      else
-      {
-        for (const auto& subMinterm : expandIntermediateMinterm(minterm))
-        {
-          expandedMinterms.push_back(subMinterm);
-        }
-      }
-    }
-  }
-
-  bool usesOnlyCircuitInputs(const std::vector<std::string>& inputs)
-  {
-    for (const auto& input : inputs)
-    {
-      if (!is_top_level_input[input])
-      {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  std::vector<QM::MintermMap> expandIntermediateMinterm(const QM::MintermMap& minterm)
-  {
-    std::vector<QM::MintermMap> expandedMinterms;
-    // Recursive expansion logic here if needed
-    return expandedMinterms;
+    // output_map_.emplace(output, local_minterms);
   }
 };
 }  // namespace File

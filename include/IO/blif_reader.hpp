@@ -9,7 +9,7 @@
 #include <vector>
 #include "IO/file_reader.hpp"
 #include "QM/QMUtil.hpp"
-#include "QM/minterm_map.hpp"
+#include "QM/minterm_and_dc_map.hpp"
 
 #ifndef IO_BLIF_READER_HPP_
 #define IO_BLIF_READER_HPP_
@@ -19,10 +19,10 @@ namespace IO
 namespace File
 {
 
-class BlifReader : FileReader<QM::MintermMap>
+class BlifReader : public FileReader<QM::MintermDCMap>
 {
  public:
-  explicit BlifReader(const std::string& filename) : FileReader<QM::MintermMap>(filename)
+  explicit BlifReader(const std::string& filename) : FileReader<QM::MintermDCMap>(filename)
   {
   }
 
@@ -49,8 +49,7 @@ class BlifReader : FileReader<QM::MintermMap>
     }
     if (token == ".outputs")
     {
-      std::string output;
-      iss >> output;
+      iss >> output_;
     }
     else if (token == ".names")
     {
@@ -64,16 +63,18 @@ class BlifReader : FileReader<QM::MintermMap>
     return true;  // Continue processing
   }
 
-  std::vector<QM::MintermMap> process() override
+  QM::MintermDCMap process() override
   {
-    return expandAllMinterms();
+    // return QM::MintermDCMap(expand(output_map_[output_]), expand(dc_map_[output_]));
   }
 
  private:
   std::vector<std::string> top_level_inputs;
   std::map<std::string, bool> is_top_level_input;
   std::map<std::string, QM::MintermMap> output_map_;
+  std::map<std::string, QM::MintermMap> dc_map_;
   std::string current_token_;
+  std::string output_;
 
   void process_subcircuit(const std::string& firstLine)
   {
@@ -97,10 +98,10 @@ class BlifReader : FileReader<QM::MintermMap>
       std::istringstream mintermStream(line);
       std::string inputPattern, outputValue;
       mintermStream >> inputPattern >> outputValue;
-      local_minterms.push_back({inputs, inputPattern, output, outputValue});
+      local_minterms.push_back({inputs, output});
     }
 
-    output_map_[output] = local_minterms;
+    // output_map_.emplace(output, local_minterms);
   }
 
   // std::vector<QM::MintermMap> expandAllMinterms()
@@ -160,7 +161,7 @@ class BlifReader : FileReader<QM::MintermMap>
     auto root_map = minterm;
     for (auto& sub_map : sub_minterms)
     {
-      root_map = QM::QMUtil::combine(root_map, sub_map);
+      root_map = root_map + sub_map;
     }
     return root_map;
   }

@@ -2,6 +2,7 @@
 // #include <iostream>
 // #include <memory>
 // #include <sstream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include "IO/io_util.hpp"
@@ -19,7 +20,7 @@ class FileReader
  public:
   virtual ~FileReader() = default;
 
-  std::vector<T> read_file()
+  T read_file()
   {
     std::ifstream file(filename_);
     if (!file.is_open())
@@ -27,10 +28,12 @@ class FileReader
       // handle error from io_util
     }
 
+    std::cout << "opened file" << std::endl;
     std::string line;
     while (std::getline(file, line))
     {
       if (line.empty()) continue;
+      std::cout << "reading line: " << line << std::endl;
       if (!read_line(line))
       {
         break;
@@ -50,9 +53,7 @@ class FileReader
   IOUtil::FileType filetype_;
 
   virtual bool read_line(const std::string& line) = 0;
-  virtual std::vector<T> process() = 0;
-
- private:
+  virtual T process() = 0;
 };
 }  // namespace File
 }  // namespace IO
