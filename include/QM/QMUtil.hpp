@@ -14,6 +14,7 @@ namespace QM
 class QMUtil
 {
  public:
+  static const uint8_t max = 64;
   static std::vector<uint64_t> termtoveci(const std::string& term)
   {
     auto expanded = expand_terms(term);
@@ -61,9 +62,14 @@ class QMUtil
     return completed_term;
   }
 
+  static uint64_t get_bin_ones(uint64_t term)
+  {
+    return std::bitset<max>(term).count();
+  }
+
   static uint64_t bstrtoi(const std::string& binary_string_representation)
   {
-    std::bitset<64> as_bits(binary_string_representation);
+    std::bitset<max> as_bits(binary_string_representation);
     return as_bits.to_ullong();
   }
 
@@ -88,6 +94,22 @@ class QMUtil
       default:
         return States::invalid_state;
     }
+  }
+
+  static std::vector<States> get_states(uint64_t term, uint64_t size)
+  {
+    std::vector<States> state_v;
+    std::bitset<max> bin(term);
+    std::string bin_str(bin.to_string());
+    std::string bin_substr(bin_str.substr(max - size));
+
+    for (char c : bin_substr)
+    {
+      auto cur_state = get_state(c);
+      state_v.push_back(cur_state);
+    }
+
+    return state_v;
   }
 
   static std::string replace_bit_at(uint64_t replace_idx,

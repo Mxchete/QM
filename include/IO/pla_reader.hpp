@@ -48,11 +48,11 @@ class PlaReader : public FileReader<QM::MintermDCMap>
     {
       input_labels_provided_ = true;
       std::string input;
-      iss >> input;
       while (iss >> input)
       {
         input_labels_.push_back(input);
       }
+      logger_->trace("Received inputs of size: " + std::to_string(input_labels_.size()));
       minterm_dc_map_.add_inputs(input_labels_);
     }
     else if (token == ".ob")

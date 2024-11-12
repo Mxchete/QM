@@ -23,7 +23,9 @@ class FileReaderFactory
       switch (filetype)
       {
         case IOUtil::FileType::blif:
-          return std::make_unique<BlifReader>(filename, logger);
+          // Note for implementation: blif does not need to be supported, only PLA
+          IOUtil::error_handler(IOUtil::Error::bad_filetype);
+          // return std::make_unique<BlifReader>(filename, logger);
           break;
         case IOUtil::FileType::pla:
           return std::make_unique<PlaReader>(filename, logger);

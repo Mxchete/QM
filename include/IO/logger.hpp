@@ -96,7 +96,7 @@ class Logger
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
 
     // Format the time as YYYY-MM-DD HH:MM:SS
-    std::tm utc_time = *std::gmtime(&now_c);  // Convert to UTC time
+    std::tm utc_time = *std::gmtime(&now_c);
     if (out_)
     {
       *out_ << "[" << level << "][" << std::put_time(&utc_time, "%Y-%m-%d %H:%M:%S") << "] "

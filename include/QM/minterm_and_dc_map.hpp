@@ -24,6 +24,11 @@ class MintermDCMap
   {
   }
 
+  uint64_t input_size()
+  {
+    return minterms_.inputs().size();
+  }
+
   MintermMap get_minterms()
   {
     return minterms_;
