@@ -4,6 +4,7 @@
 #include <memory>
 #include "IO/file_reader.hpp"
 #include "IO/file_reader_factory.hpp"
+#include "IO/logger.hpp"
 #include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"
 #include "QM/qm_process_handler.hpp"
@@ -39,13 +40,14 @@ int main(int argc, char** argv)
 
   if (filename)
   {
+    std::shared_ptr<IO::Logger> logger = std::make_shared<IO::Logger>(IO::Logger::LogLevel::TRACE);
     std::string file_name = argv[2];
-    auto file_reader = IO::File::FileReaderFactory<QM::MintermDCMap>::create(file_name);
+    auto file_reader = IO::File::FileReaderFactory<QM::MintermDCMap>::create(file_name, logger);
 
-    std::cout << "Created file" << std::endl;
+    logger->info("File reader object created");
 
     QM::MintermDCMap map(file_reader->read_file());
-    QM::QMProcessHandler qm_processor(map);
+    QM::QMProcessHandler qm_processor(map, logger);
 
     QM::MintermMap final_product(qm_processor.process());
     return EXIT_SUCCESS;

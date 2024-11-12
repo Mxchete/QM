@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include "IO/logger.hpp"
 #include "QM/QMUtil.hpp"
 
 namespace QM
@@ -16,7 +17,10 @@ namespace QM
 class MintermMap
 {
  public:
-  MintermMap(std::vector<std::string>& input, std::string& output) : input_(input), output_(output)
+  MintermMap(std::vector<std::string>& input,
+             std::string& output,
+             std::shared_ptr<IO::Logger> logger)
+      : input_(input), output_(output), logger_(logger)
   {
   }
 
@@ -53,7 +57,7 @@ class MintermMap
 
     // clang doesn't like me adding this to the constructor directly
     std::string new_out = mastermap.output();
-    QM::MintermMap combined_map(new_inputs, new_out);
+    // QM::MintermMap combined_map(new_inputs, new_out, logger_);
     auto replace = std::distance(master_inputs.begin(), sub_output_location);
 
     // keeping for reference on converting and emplacing
@@ -146,6 +150,7 @@ class MintermMap
   std::vector<std::string> input_;
   std::string output_;
   std::unordered_set<uint64_t> map_;
+  std::shared_ptr<IO::Logger> logger_;
 };
 }  // namespace QM
 

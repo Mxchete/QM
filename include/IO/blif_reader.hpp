@@ -22,7 +22,8 @@ namespace File
 class BlifReader : public FileReader<QM::MintermDCMap>
 {
  public:
-  explicit BlifReader(const std::string& filename) : FileReader<QM::MintermDCMap>(filename)
+  explicit BlifReader(const std::string& filename, std::shared_ptr<IO::Logger> logger)
+      : FileReader<QM::MintermDCMap>(filename, logger)
   {
   }
 
@@ -98,7 +99,7 @@ class BlifReader : public FileReader<QM::MintermDCMap>
       std::istringstream mintermStream(line);
       std::string inputPattern, outputValue;
       mintermStream >> inputPattern >> outputValue;
-      local_minterms.push_back({inputs, output});
+      local_minterms.push_back({inputs, output, logger_});
     }
 
     // output_map_.emplace(output, local_minterms);

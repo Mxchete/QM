@@ -4,15 +4,23 @@
 
 QM::MintermMap QM::QMProcessHandler::process()
 {
-  std::cout << "QM::Process" << std::endl;
+  logger_->trace("QMProcessHandler::Received the following map:");
+  logger_->trace("Minterms:");
   for (auto term : input_map_.get_minterms().get())
   {
-    std::cout << term << std::endl;
+    logger_->trace(std::to_string(term));
   }
+  logger_->trace("Dont Care:");
   for (auto term : input_map_.get_dont_care_terms().get())
   {
-    std::cout << term << std::endl;
+    logger_->trace(std::to_string(term));
   }
 
+  QM::PrimeImplicants pi_table(QM::QMProcessHandler::generate_pi_table());
+
   return input_map_.get_minterms();
+}
+
+QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
+{
 }

@@ -19,7 +19,8 @@ namespace File
 class PlaReader : public FileReader<QM::MintermDCMap>
 {
  public:
-  explicit PlaReader(const std::string& filename) : FileReader<QM::MintermDCMap>(filename)
+  explicit PlaReader(const std::string& filename, std::shared_ptr<IO::Logger> logger)
+      : FileReader<QM::MintermDCMap>(filename, logger)
   {
   }
 
@@ -41,7 +42,7 @@ class PlaReader : public FileReader<QM::MintermDCMap>
       std::string input;
       iss >> input;
       num_inputs_ = std::stoi(input);
-      std::cout << "num_inputs_: " << input << std::endl;
+      logger_->trace("num_inputs: " + std::to_string(num_inputs_));
     }
     else if (token == ".ilb")
     {
@@ -133,34 +134,6 @@ class PlaReader : public FileReader<QM::MintermDCMap>
   uint64_t received_ = 0;
   bool input_labels_provided_ = false;
   bool output_labels_provided_ = false;
-
-  void process_subcircuit(const std::string& firstLine)
-  {
-    std::istringstream iss(firstLine);
-    std::string token;
-    iss >> token;  // Skip ".names"
-
-    std::vector<std::string> inputs;
-    while (iss >> token)
-    {
-      inputs.push_back(token);
-    }
-    std::string output = inputs.back();
-    inputs.pop_back();
-
-    // Parse minterms in the block
-    std::string line;
-    std::vector<QM::MintermMap> local_minterms;
-    while (std::getline(iss, line) && !line.empty() && line[0] != '.')
-    {
-      std::istringstream mintermStream(line);
-      std::string inputPattern, outputValue;
-      mintermStream >> inputPattern >> outputValue;
-      local_minterms.push_back({inputs, output});
-    }
-
-    // output_map_.emplace(output, local_minterms);
-  }
 };
 }  // namespace File
 }  // namespace IO
