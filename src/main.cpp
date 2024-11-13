@@ -1,46 +1,103 @@
+#include <getopt.h>
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include "IO/file_reader.hpp"
 #include "IO/file_reader_factory.hpp"
+#include "IO/io_util.hpp"
 #include "IO/logger.hpp"
 #include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"
 #include "QM/qm_process_handler.hpp"
 
-char* get_arg(char** begin, char** end, const std::string& option)
-{
-  char** itr = std::find(begin, end, option);
-  if (itr != end && ++itr != end)
-  {
-    return *itr;
-  }
-  return 0;
-}
-
-bool arg_exists(char** begin, char** end, const std::string& option)
-{
-  return std::find(begin, end, option) != end;
-}
+const struct option longopts[] = {
+    {"version", no_argument, 0, 'v'},
+    {"help", no_argument, 0, 'h'},
+    {"filepath", required_argument, 0, 'f'},
+    {"outputpath", required_argument, 0, 'o'},
+    {"loglevel", required_argument, 0, 'l'},
+    {"logpath", required_argument, 0, 'i'},
+    {0, 0, 0, 0},
+};
 
 void print_help()
 {
-  std::cout << "Usage:" << std::endl;
-  std::cout << "Help: -h" << std::endl;
+  std::cout << std::endl << "Command    : Argument         | Explanation" << std::endl;
+  std::cout << "Help       : --help, -h       | Prints this message then exits" << std::endl;
+  std::cout << "Version    : --version, -v    | Prints build information then exits" << std::endl;
+  std::cout
+      << "Input File : --filepath, -f   | !Required! Specifies the input filepath (must be in "
+         "PLA format)"
+      << std::endl;
+  std::cout << "Ouput File : --outputpath, -o | Specifies the output file path, otherwise prints "
+               "output to stdout only"
+            << std::endl;
+  std::cout << "Log level  : --loglevel, -l   | Specifies the level of logs that will be printed "
+               "(TRACE, DEBUG, INFO, WARN, ERROR, FATAL) Default=INFO"
+            << std::endl;
+  std::cout << "Log path   : --logpath, -i    | Specifies output path for logs, otherwise "
+               "prints logs to "
+               "stdout only"
+            << std::endl;
 }
 int main(int argc, char** argv)
 {
-  if (arg_exists(argv, argv + argc, "-h"))
-  {
-    print_help();
-  }
+  std::cout << ">>>> QM SIMPLIFIER <<<<" << std::endl;
+  std::cout << "Built on: " << __DATE__ << " " << __TIME__ << std::endl;
+  int idx;
+  int iarg = 0;
+  char* filename;
+  char* output_file;
+  std::string log_level = "TRACE";
+  std::string log_path = "";
 
-  char* filename = get_arg(argv, argv + argc, "-f");
+  // turn off getopt error message
+  opterr = 1;
+
+  while (iarg != -1)
+  {
+    iarg = getopt_long(argc, argv, "vhf:o:l:p:", longopts, &idx);
+
+    switch (iarg)
+    {
+      case 'h':
+        print_help();
+        return EXIT_SUCCESS;
+
+      case 'v':
+        return EXIT_SUCCESS;
+
+      case 'f':
+        filename = optarg;
+        break;
+
+      case 'o':
+        output_file = optarg;
+        break;
+
+      case 'l':
+        log_level = optarg;
+        break;
+
+      case 'p':
+        log_path = optarg;
+        break;
+    }
+  }
 
   if (filename)
   {
-    std::shared_ptr<IO::Logger> logger = std::make_shared<IO::Logger>(IO::Logger::LogLevel::TRACE);
+    IO::Logger::LogLevel lvl = IO::Logger::get_log_level(log_level);
+    std::shared_ptr<IO::Logger> logger;
+    if (log_path != "")
+    {
+      logger = std::make_shared<IO::Logger>(log_path, lvl);
+    }
+    else
+    {
+      logger = std::make_shared<IO::Logger>(lvl);
+    }
     std::string file_name = argv[2];
     auto file_reader = IO::File::FileReaderFactory<QM::MintermDCMap>::create(file_name, logger);
 

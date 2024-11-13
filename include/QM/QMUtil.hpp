@@ -8,6 +8,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
+#include "QM/types.hpp"
 
 namespace QM
 {
@@ -73,14 +74,6 @@ class QMUtil
     return as_bits.to_ullong();
   }
 
-  enum States
-  {
-    zero,
-    one,
-    dc,
-    invalid_state
-  };
-
   static States get_state(char b)
   {
     switch (b)
@@ -96,9 +89,9 @@ class QMUtil
     }
   }
 
-  static std::vector<States> get_states(uint64_t term, uint64_t size)
+  static QM::bin get_states(uint64_t term, uint64_t size)
   {
-    std::vector<States> state_v;
+    QM::bin bin_rep;
     std::bitset<max> bin(term);
     std::string bin_str(bin.to_string());
     std::string bin_substr(bin_str.substr(max - size));
@@ -106,10 +99,10 @@ class QMUtil
     for (char c : bin_substr)
     {
       auto cur_state = get_state(c);
-      state_v.push_back(cur_state);
+      bin_rep.push_back(cur_state);
     }
 
-    return state_v;
+    return bin_rep;
   }
 
   static std::string replace_bit_at(uint64_t replace_idx,

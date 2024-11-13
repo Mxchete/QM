@@ -88,12 +88,12 @@ class PlaReader : public FileReader<QM::MintermDCMap>
       std::string out;
       iss >> out;
       std::vector<uint64_t> processed_term_list = QM::QMUtil::termtoveci(term);
-      QM::QMUtil::States which_map = QM::QMUtil::get_state(out[0]);
-      if (which_map == QM::QMUtil::States::one)
+      QM::States which_map = QM::QMUtil::get_state(out[0]);
+      if (which_map == QM::States::one)
       {
         minterm_dc_map_.add_minterm(processed_term_list);
       }
-      else if (which_map == QM::QMUtil::States::dc)
+      else if (which_map == QM::States::dc)
       {
         minterm_dc_map_.add_dc_term(processed_term_list);
       }

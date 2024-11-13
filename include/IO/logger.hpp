@@ -20,8 +20,37 @@ class Logger
     DEBUG,
     INFO,
     WARN,
-    ERR
+    ERR,
+    FATAL
   };
+
+  static LogLevel get_log_level(const std::string& lvl_str)
+  {
+    if (lvl_str == "TRACE")
+    {
+      return TRACE;
+    }
+    else if (lvl_str == "DEBUG")
+    {
+      return DEBUG;
+    }
+    else if (lvl_str == "INFO")
+    {
+      return INFO;
+    }
+    else if (lvl_str == "ERROR")
+    {
+      return ERR;
+    }
+    else if (lvl_str == "FATAL")
+    {
+      return FATAL;
+    }
+    else
+    {
+      return WARN;
+    }
+  }
 
   Logger(LogLevel lvl = LogLevel::INFO) : out_(&std::cout), log_level_(lvl)
   {
@@ -82,6 +111,14 @@ class Logger
     if (log_level_ <= LogLevel::ERR)
     {
       log("ERROR", message);
+    }
+  }
+
+  inline void fatal(const std::string& message)
+  {
+    if (log_level_ <= LogLevel::FATAL)
+    {
+      log("FATAL", message);
     }
   }
 
