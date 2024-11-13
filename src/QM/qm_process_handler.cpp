@@ -79,4 +79,18 @@ QM::QMProcessHandler::find_pi(
       logger_->trace(std::to_string(tmp.first) + ": " + str);
     }
   }
+  for (std::pair<const uint64_t, std::map<std::set<uint64_t>, std::vector<QMUtil::States>>>&
+           terms_for_num_ones : current_table)
+  {
+    auto num_ones = terms_for_num_ones.first;
+    auto next_num = num_ones + 1;
+    auto& terms = terms_for_num_ones.second;
+    if (current_table.find(next_num) == current_table.end())
+    {
+      continue;
+    }
+    for (std::pair<const std::set<uint64_t>, std::vector<QMUtil::States>>& term : terms)
+    {
+    }
+  }
 }
