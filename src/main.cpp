@@ -5,7 +5,6 @@
 #include <memory>
 #include "IO/file_reader.hpp"
 #include "IO/file_reader_factory.hpp"
-#include "IO/io_util.hpp"
 #include "IO/logger.hpp"
 #include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"

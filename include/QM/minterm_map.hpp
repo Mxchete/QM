@@ -8,7 +8,6 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include "IO/logger.hpp"
 #include "QM/QMUtil.hpp"
@@ -22,7 +21,11 @@ class MintermMap
   MintermMap(std::vector<std::string>& input,
              std::string& output,
              std::shared_ptr<IO::Logger> logger)
-      : input_(input), output_(output), logger_(logger)
+      : input_(input), output_(output), logger_(std::move(logger))
+  {
+  }
+
+  MintermMap(std::shared_ptr<IO::Logger> logger) : logger_(std::move(logger))
   {
   }
 
@@ -40,13 +43,19 @@ class MintermMap
     output_ = output;
   }
 
-  inline bool fill_onset(std::vector<uint64_t> onset)
+  inline bool fill_onset(std::vector<uint64_t>& onset)
   {
     bool success = true;
     map_.reserve(onset.size());
     for (uint64_t term : onset)
     {
-      QM::bin in_binary(QMUtil::get_bin_ones(term));
+      QM::bin in_binary(QMUtil::get_states(term, input_.size()));
+      std::string dbg;
+      for (auto& state : in_binary)
+      {
+        dbg += std::to_string(state);
+      }
+      logger_->trace("For num: " + std::to_string(term) + ", bin: " + dbg);
       success &= map_.emplace(term, in_binary).second;
     }
     return success;

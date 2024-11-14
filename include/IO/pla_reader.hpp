@@ -22,6 +22,10 @@ class PlaReader : public FileReader<QM::MintermDCMap>
   explicit PlaReader(const std::string& filename, std::shared_ptr<IO::Logger> logger)
       : FileReader<QM::MintermDCMap>(filename, logger)
   {
+    QM::MintermMap minterms(logger);
+    QM::MintermMap dc(logger);
+    QM::MintermDCMap minterm_dc_map(minterms, dc);
+    minterm_dc_map_ = minterm_dc_map;
   }
 
  protected:
@@ -42,7 +46,7 @@ class PlaReader : public FileReader<QM::MintermDCMap>
       std::string input;
       iss >> input;
       num_inputs_ = std::stoi(input);
-      logger_->trace("num_inputs: " + std::to_string(num_inputs_));
+      logger_->trace("PLAReader::num_inputs: " + std::to_string(num_inputs_));
     }
     else if (token == ".ilb")
     {
@@ -52,7 +56,7 @@ class PlaReader : public FileReader<QM::MintermDCMap>
       {
         input_labels_.push_back(input);
       }
-      logger_->trace("Received inputs of size: " + std::to_string(input_labels_.size()));
+      logger_->trace("PLAReader::Received inputs of size: " + std::to_string(input_labels_.size()));
       minterm_dc_map_.add_inputs(input_labels_);
     }
     else if (token == ".ob")
@@ -72,6 +76,18 @@ class PlaReader : public FileReader<QM::MintermDCMap>
     {
       std::string val;
       iss >> val;
+      if (!input_labels_provided_)
+      {
+        for (int i = 0; i < num_inputs_; i++)
+        {
+          input_labels_.push_back(std::to_string(i));
+        }
+        minterm_dc_map_.add_inputs(input_labels_);
+      }
+      if (!output_labels_provided_)
+      {
+        minterm_dc_map_.add_output("1");
+      }
       num_product_terms_ = std::stoi(val);
     }
     else if (token == ".e")
@@ -109,18 +125,6 @@ class PlaReader : public FileReader<QM::MintermDCMap>
 
   QM::MintermDCMap process() override
   {
-    if (!input_labels_provided_)
-    {
-      for (int i = 0; i < num_inputs_; i++)
-      {
-        input_labels_.push_back(std::to_string(i));
-      }
-      minterm_dc_map_.add_inputs(input_labels_);
-    }
-    if (!output_labels_provided_)
-    {
-      minterm_dc_map_.add_output("1");
-    }
     return minterm_dc_map_;
   }
 

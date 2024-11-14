@@ -39,12 +39,12 @@ class MintermDCMap
     return dc_;
   }
 
-  bool add_minterm(std::vector<uint64_t> terms)
+  bool add_minterm(std::vector<uint64_t>& terms)
   {
     return minterms_.fill_onset(terms);
   }
 
-  bool add_dc_term(std::vector<uint64_t> terms)
+  bool add_dc_term(std::vector<uint64_t>& terms)
   {
     return dc_.fill_onset(terms);
   }
