@@ -68,6 +68,11 @@ class QMUtil
     return std::bitset<max>(term).count();
   }
 
+  static uint64_t get_num_ones_from_bin(QM::bin& term)
+  {
+    return std::count(term.begin(), term.end(), States::one);
+  }
+
   static uint64_t bstrtoi(const std::string& binary_string_representation)
   {
     std::bitset<max> as_bits(binary_string_representation);

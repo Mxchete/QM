@@ -1,6 +1,5 @@
 #include "QM/qm_process_handler.hpp"
 #include <algorithm>
-#include <iostream>
 #include <map>
 #include <optional>
 #include <utility>
@@ -37,7 +36,9 @@ QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
   add_terms_to_table(table, input_map_.get_minterms());
   add_terms_to_table(table, input_map_.get_dont_care_terms());
 
-  QM::QMProcessHandler::find_pi(table);
+  QM::tabular_terms prime_implicants = QM::QMProcessHandler::find_pi(table);
+
+  logger_->trace("found pi");
 }
 
 // this method should recursively iterate through each table needed & return the table with combined
@@ -57,6 +58,7 @@ QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
       logger_->trace(std::to_string(tmp.first) + ": " + str);
     }
   }
+  std::vector<QM::dual_rep> used_terms;
   QM::tabular_terms new_table;
   // for each number of ones in the table
   for (std::pair<const uint64_t, std::map<std::vector<uint64_t>, QM::bin>>& terms_for_num_ones :
@@ -78,20 +80,50 @@ QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
            next_terms_for_num_ones->second)
       {
         std::optional<QM::dual_rep> combined = combine(comparison_term, next_term);
-        // TODO: handle if we were able to combine or not
-        // if we combined remove terms from current table & add combined term to new table
         if (!combined)
         {
           continue;
         }
-        if (combined->first.size() == comparison_term.first.size())
+        auto new_num_ones = QM::QMUtil::get_num_ones_from_bin(combined->second);
+        if (std::count_if(new_table[new_num_ones].begin(), new_table[new_num_ones].end(),
+                          [&](const auto& e) { return e.second == combined->second; }) == 0)
         {
-          current_table[next_num].erase(next_term);
+          used_terms.push_back(comparison_term);
+          used_terms.push_back(next_term);
+          new_table[new_num_ones].emplace(combined->first, combined->second);
+          logger_->debug("QMProcessHandler::Emplaced term");
+        }
+        else
+        {
+          logger_->debug("QMProcessHandler::Term repeated!");
         }
       }
     }
   }
-  QM::tabular_terms finished_table(find_pi(new_table));
+
+  QM::tabular_terms finished_table;
+  if (new_table.size() != 0)
+  {
+    finished_table = find_pi(new_table);
+  }
+
+  for (std::pair<const uint64_t, std::map<std::vector<uint64_t>, QM::bin>>& terms_for_num_ones :
+       current_table)
+  {
+    auto num_ones = terms_for_num_ones.first;
+    auto& terms = terms_for_num_ones.second;
+    // for each term in the given number of ones
+    for (std::pair<const std::vector<uint64_t>, QM::bin>& comparison_term : terms)
+    {
+      // if comparison_term not in used_terms, add it to finished_table
+      if (std::count(used_terms.begin(), used_terms.end(), comparison_term) == 0)
+      {
+        finished_table[num_ones].emplace(comparison_term);
+      }
+    }
+  }
+
+  return finished_table;
 }
 
 void QM::QMProcessHandler::add_terms_to_table(QM::tabular_terms& table, const QM::sMintermMap terms)
@@ -149,11 +181,11 @@ std::optional<QM::dual_rep> QM::QMProcessHandler::combine(const QM::dual_rep& nu
     combined_term.push_back(QM::States::dc);
   }
 
-  // TODO: case where the same term appears twice, we should signal the processor to throw out one
-  // of the terms
+  // Log an error if this case occurs, since it should be impossible
   if (diff_count == 0)
   {
-    return num_one;
+    logger_->error("Two terms found with no difference, but different number of ones");
+    return std::nullopt;
   }
 
   QM::combined_terms new_combination;
@@ -172,8 +204,13 @@ std::optional<QM::dual_rep> QM::QMProcessHandler::combine(const QM::dual_rep& nu
     }
     str += std::to_string(state) + "";
   }
-  logger_->trace("<" + std::to_string(num_one.first[0]) + ", " + std::to_string(num_two.first[0]) +
-                 ">: " + str);
+  std::string cmb_term_str = "<";
+  for (int i = 0; i < new_combination.size(); i++)
+  {
+    cmb_term_str += std::to_string(new_combination[i]) + ", ";
+  }
+  cmb_term_str += ">";
+  logger_->trace(cmb_term_str + ": " + str);
 
   return std::make_pair(new_combination, combined_term);
 }
