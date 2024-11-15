@@ -2,9 +2,11 @@
 #define QM_PROCESSOR_HPP_
 
 #include <map>
+#include <optional>
 #include <set>
 #include "IO/logger.hpp"
 #include "QM/minterm_and_dc_map.hpp"
+#include "QM/minterm_map.hpp"
 #include "QM/prime_implicants.hpp"
 #include "QM/types.hpp"
 
@@ -26,6 +28,8 @@ class QMProcessHandler
 
   PrimeImplicants generate_pi_table();
   QM::tabular_terms find_pi(QM::tabular_terms& current_table);
+  void add_terms_to_table(QM::tabular_terms& table, QM::sMintermMap terms);
+  std::optional<QM::dual_rep> combine(const QM::dual_rep& num_one, const QM::dual_rep& num_two);
 };
 }  // namespace QM
 

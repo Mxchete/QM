@@ -2,7 +2,8 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
-#include <set>
+#include <optional>
+#include <utility>
 #include "QM/QMUtil.hpp"
 #include "QM/minterm_map.hpp"
 #include "QM/types.hpp"
@@ -11,63 +12,40 @@ QM::MintermMap QM::QMProcessHandler::process()
 {
   logger_->trace("QMProcessHandler::Received the following map:");
   logger_->trace("Minterms:");
-  for (auto term : input_map_.get_minterms().get())
+  for (auto term : input_map_.get_minterms()->get())
   {
     logger_->trace(std::to_string(term.first));
   }
   logger_->trace("Dont Care:");
-  for (auto term : input_map_.get_dont_care_terms().get())
+  for (auto term : input_map_.get_dont_care_terms()->get())
   {
     logger_->trace(std::to_string(term.first));
   }
 
   QM::PrimeImplicants pi_table(QM::QMProcessHandler::generate_pi_table());
 
-  return input_map_.get_minterms();
+  return *input_map_.get_minterms();
 }
 
 QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
 {
-  logger_->trace("Creating table 1");
-  // the int key will be the number of 1's in the minterm the vector will be of size
-  // input_map_.input_size() and will contain the state (0, 1, dc) for each bit
-  std::map<uint64_t, std::map<std::set<uint64_t>, QM::bin>> table;
-  for (auto& term : input_map_.get_minterms().get())
-  {
-    auto int_val = term.first;
-    auto& bin_rep = term.second;
-    logger_->trace("For term: " + std::to_string(int_val));
-    uint64_t size = input_map_.input_size();
-    logger_->trace("Size is: " + std::to_string(size));
-    uint64_t num_ones = QM::QMUtil::get_bin_ones(int_val);
-    logger_->trace("Number of ones is: " + std::to_string(num_ones));
-    logger_->trace("Generated minterm of size " + std::to_string(bin_rep.size()));
-    std::set<uint64_t> combined_term_key;
-    combined_term_key.emplace(int_val);
-    table[num_ones].emplace(combined_term_key, bin_rep);
-  }
-  for (auto& term : input_map_.get_dont_care_terms().get())
-  {
-    auto int_val = term.first;
-    auto& bin_rep = term.second;
-    logger_->trace("For term: " + std::to_string(int_val));
-    uint64_t size = input_map_.input_size();
-    logger_->trace("Size is: " + std::to_string(size));
-    uint64_t num_ones = QM::QMUtil::get_bin_ones(int_val);
-    logger_->trace("Number of ones is: " + std::to_string(num_ones));
-    logger_->trace("Generated minterm of size " + std::to_string(bin_rep.size()));
-    std::set<uint64_t> combined_term_key;
-    combined_term_key.emplace(int_val);
-    table[num_ones].emplace(combined_term_key, bin_rep);
-  }
+  logger_->trace("QMProcessHandler::Creating table 1");
+  // tabular terms is, essentially, a map with uint64_t keys, representing the number of 1's in the
+  // binary representation of the minterm, and values that are maps to sets of combined minterms
+  // (keys) and their binary representation (vectors whose values are 0, 1, or dc)
+  QM::tabular_terms table;
+  add_terms_to_table(table, input_map_.get_minterms());
+  add_terms_to_table(table, input_map_.get_dont_care_terms());
 
   QM::QMProcessHandler::find_pi(table);
 }
 
+// this method should recursively iterate through each table needed & return the table with combined
+// terms + terms it couldn't combine for the given iteration of the function
 QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table)
 {
-  for (std::pair<uint64_t, std::map<std::set<uint64_t>, std::vector<QM::States>>> tmp :
-       current_table)
+  // this loop cant be removed, only for debugging to ensure that proper table is received
+  for (std::pair<uint64_t, std::map<std::vector<uint64_t>, QM::bin>> tmp : current_table)
   {
     for (auto& mterm : tmp.second)
     {
@@ -79,18 +57,123 @@ QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
       logger_->trace(std::to_string(tmp.first) + ": " + str);
     }
   }
-  for (std::pair<const uint64_t, std::map<std::set<uint64_t>, std::vector<QM::States>>>&
-           terms_for_num_ones : current_table)
+  QM::tabular_terms new_table;
+  // for each number of ones in the table
+  for (std::pair<const uint64_t, std::map<std::vector<uint64_t>, QM::bin>>& terms_for_num_ones :
+       current_table)
   {
     auto num_ones = terms_for_num_ones.first;
     auto next_num = num_ones + 1;
+    auto next_terms_for_num_ones = current_table.find(next_num);
     auto& terms = terms_for_num_ones.second;
-    if (current_table.find(next_num) == current_table.end())
+    if (next_terms_for_num_ones == current_table.end())
     {
       continue;
     }
-    for (std::pair<const std::set<uint64_t>, std::vector<QM::States>>& term : terms)
+    // for each term in the given number of ones
+    for (std::pair<const std::vector<uint64_t>, QM::bin>& comparison_term : terms)
     {
+      // for each term in next number of ones
+      for (std::pair<const std::vector<uint64_t>, QM::bin>& next_term :
+           next_terms_for_num_ones->second)
+      {
+        std::optional<QM::dual_rep> combined = combine(comparison_term, next_term);
+        // TODO: handle if we were able to combine or not
+        // if we combined remove terms from current table & add combined term to new table
+        if (!combined)
+        {
+          continue;
+        }
+        if (combined->first.size() == comparison_term.first.size())
+        {
+          current_table[next_num].erase(next_term);
+        }
+      }
     }
   }
+  QM::tabular_terms finished_table(find_pi(new_table));
+}
+
+void QM::QMProcessHandler::add_terms_to_table(QM::tabular_terms& table, const QM::sMintermMap terms)
+{
+  for (auto& term : terms->get())
+  {
+    auto int_val = term.first;
+    auto& bin_rep = term.second;
+    logger_->trace("QMProcessHandler::For term: " + std::to_string(int_val));
+    uint64_t size = input_map_.input_size();
+    logger_->trace("QMProcessHandler::Size is: " + std::to_string(size));
+    uint64_t num_ones = QM::QMUtil::get_bin_ones(int_val);
+    logger_->trace("QMProcessHandler::Number of ones is: " + std::to_string(num_ones));
+    logger_->trace("QMProcessHandler::Generated minterm of size " + std::to_string(bin_rep.size()));
+    std::vector<uint64_t> combined_term_key;
+    combined_term_key.push_back(int_val);
+    table[num_ones].emplace(combined_term_key, bin_rep);
+  }
+}
+
+std::optional<QM::dual_rep> QM::QMProcessHandler::combine(const QM::dual_rep& num_one,
+                                                          const QM::dual_rep& num_two)
+{
+  if (num_one.second.size() != num_two.second.size())
+  {
+    logger_->error("Trying to compare two terms of different binary size");
+    return std::nullopt;
+  }
+
+  // if this condition triggers
+  if (num_one.first.size() != num_two.first.size())
+  {
+    logger_->error("Trying to compare two terms from different stages of algorithm");
+    return std::nullopt;
+  }
+
+  int diff_count = 0;
+  QM::bin combined_term;
+  for (int i = 0; i < num_one.second.size(); i++)
+  {
+    if (diff_count > 1)
+    {
+      return std::nullopt;
+    }
+    if (num_one.second[i] == num_two.second[i])
+    {
+      combined_term.push_back(num_one.second[i]);
+      continue;
+    }
+    if (num_one.second[i] == QM::States::dc || num_two.second[i] == QM::States::dc)
+    {
+      return std::nullopt;
+    }
+    diff_count += 1;
+    combined_term.push_back(QM::States::dc);
+  }
+
+  // TODO: case where the same term appears twice, we should signal the processor to throw out one
+  // of the terms
+  if (diff_count == 0)
+  {
+    return num_one;
+  }
+
+  QM::combined_terms new_combination;
+  for (int i = 0; i < num_one.first.size(); i++)
+  {
+    new_combination.push_back(num_one.first[i]);
+    new_combination.push_back(num_two.first[i]);
+  }
+  std::string str;
+  for (auto& state : combined_term)
+  {
+    if (state == QM::States::dc)
+    {
+      str += '-';
+      continue;
+    }
+    str += std::to_string(state) + "";
+  }
+  logger_->trace("<" + std::to_string(num_one.first[0]) + ", " + std::to_string(num_two.first[0]) +
+                 ">: " + str);
+
+  return std::make_pair(new_combination, combined_term);
 }

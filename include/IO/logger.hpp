@@ -132,7 +132,6 @@ class Logger
     auto now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
 
-    // Format the time as YYYY-MM-DD HH:MM:SS
     std::tm utc_time = *std::gmtime(&now_c);
     if (out_)
     {

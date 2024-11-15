@@ -17,8 +17,8 @@ enum States
 };
 
 using bin = std::vector<States>;
-using dual_rep = std::pair<uint64_t, bin>;
-using combined_terms = std::set<uint64_t>;
+using combined_terms = std::vector<uint64_t>;
+using dual_rep = std::pair<combined_terms, bin>;
 using tabular_terms = std::map<uint64_t, std::map<combined_terms, bin>>;
 }  // namespace QM
 

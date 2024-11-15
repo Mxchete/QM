@@ -83,6 +83,8 @@ class MintermMap
   std::unordered_map<uint64_t, QM::bin> map_;
   std::shared_ptr<IO::Logger> logger_;
 };
+
+using sMintermMap = std::shared_ptr<MintermMap>;
 }  // namespace QM
 
 #endif  // QM_LITERAL_MAP_

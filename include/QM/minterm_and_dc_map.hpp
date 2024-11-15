@@ -16,7 +16,7 @@ namespace QM
 class MintermDCMap
 {
  public:
-  MintermDCMap(MintermMap& minterms, MintermMap& dc) : minterms_(minterms), dc_(dc)
+  MintermDCMap(sMintermMap& minterms, sMintermMap& dc) : minterms_(minterms), dc_(dc)
   {
   }
 
@@ -24,47 +24,49 @@ class MintermDCMap
   {
   }
 
-  uint64_t input_size()
+  inline uint64_t input_size()
   {
-    return minterms_.inputs().size();
+    return minterms_->inputs().size();
   }
 
-  MintermMap get_minterms()
+  inline sMintermMap get_minterms()
   {
     return minterms_;
   }
 
-  MintermMap get_dont_care_terms()
+  inline sMintermMap get_dont_care_terms()
   {
     return dc_;
   }
 
-  bool add_minterm(std::vector<uint64_t>& terms)
+  inline bool add_minterm(std::vector<uint64_t>& terms)
   {
-    return minterms_.fill_onset(terms);
+    return minterms_->fill_onset(terms);
   }
 
-  bool add_dc_term(std::vector<uint64_t>& terms)
+  inline bool add_dc_term(std::vector<uint64_t>& terms)
   {
-    return dc_.fill_onset(terms);
+    return dc_->fill_onset(terms);
   }
 
-  void add_inputs(const std::vector<std::string>& inputs)
+  inline void add_inputs(const std::vector<std::string>& inputs)
   {
-    minterms_.add_inputs(inputs);
-    dc_.add_inputs(inputs);
+    minterms_->add_inputs(inputs);
+    dc_->add_inputs(inputs);
   }
 
-  void add_output(const std::string& output)
+  inline void add_output(const std::string& output)
   {
-    minterms_.set_output(output);
-    dc_.set_output(output);
+    minterms_->set_output(output);
+    dc_->set_output(output);
   }
 
  private:
-  MintermMap minterms_;
-  MintermMap dc_;
+  sMintermMap minterms_;
+  sMintermMap dc_;
 };
+
+using sBooleanFunction = std::shared_ptr<MintermDCMap>;
 }  // namespace QM
 
 #endif
