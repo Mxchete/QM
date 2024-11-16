@@ -1,7 +1,10 @@
 #!/bin/bash
 
-script_dir=$PWD/$0
-echo "$script_dir"
-cd $PWD/build
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+BUILD_DIR="$PARENT_DIR/build"
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
+
 cmake ..
 make && make install
