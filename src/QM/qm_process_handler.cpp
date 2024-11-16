@@ -23,6 +23,8 @@ QM::MintermMap QM::QMProcessHandler::process()
 
   QM::PrimeImplicants pi_table(QM::QMProcessHandler::generate_pi_table());
 
+  // TODO: take essential PI table from generator & solve (using Petricks?)
+
   return *input_map_.get_minterms();
 }
 
@@ -39,6 +41,35 @@ QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
   QM::tabular_terms prime_implicants = QM::QMProcessHandler::find_pi(table);
 
   logger_->trace("found pi");
+  for (auto& pi : prime_implicants)
+  {
+    logger_->trace("QMProcessHandler::For " + std::to_string(pi.first) + " ones");
+    for (auto& imp : pi.second)
+    {
+      std::string str;
+      for (auto& state : imp.second)
+      {
+        if (state == QM::States::dc)
+        {
+          str += '-';
+          continue;
+        }
+        str += std::to_string(state) + "";
+      }
+      std::string cmb_term_str = "<";
+      for (int i = 0; i < imp.first.size(); i++)
+      {
+        cmb_term_str += std::to_string(imp.first[i]) + ", ";
+      }
+      cmb_term_str += ">";
+      logger_->trace(cmb_term_str + ": " + str);
+    }
+  }
+
+  // TODO: create essential PI table from prime implicants, which will be returned to main process
+  // function
+  QM::PrimeImplicants pi_table(prime_implicants);
+  return pi_table;
 }
 
 // this method should recursively iterate through each table needed & return the table with combined
@@ -85,11 +116,11 @@ QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
           continue;
         }
         auto new_num_ones = QM::QMUtil::get_num_ones_from_bin(combined->second);
+        used_terms.push_back(comparison_term);
+        used_terms.push_back(next_term);
         if (std::count_if(new_table[new_num_ones].begin(), new_table[new_num_ones].end(),
                           [&](const auto& e) { return e.second == combined->second; }) == 0)
         {
-          used_terms.push_back(comparison_term);
-          used_terms.push_back(next_term);
           new_table[new_num_ones].emplace(combined->first, combined->second);
           logger_->debug("QMProcessHandler::Emplaced term");
         }
