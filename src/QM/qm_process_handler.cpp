@@ -124,7 +124,8 @@ QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
     for (std::pair<const std::vector<uint64_t>, QM::bin>& comparison_term : terms)
     {
       // if comparison_term not in used_terms, add it to finished_table
-      if (std::count(used_terms.begin(), used_terms.end(), comparison_term) == 0)
+      if (std::count_if(used_terms.begin(), used_terms.end(),
+                        [&](const auto& e) { return e.second == comparison_term.second; }) == 0)
       {
         finished_table[num_ones].emplace(comparison_term);
       }
