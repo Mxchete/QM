@@ -9,7 +9,7 @@
 #include "QM/minterm_map.hpp"
 #include "QM/types.hpp"
 
-QM::MintermMap QM::QMProcessHandler::process()
+QM::sMintermMap QM::QMProcessHandler::process()
 {
   logger_->trace("QMProcessHandler::Received the following map:");
   logger_->trace("Minterms:");
@@ -26,8 +26,9 @@ QM::MintermMap QM::QMProcessHandler::process()
   QM::PrimeImplicants pi_table(QM::QMProcessHandler::generate_pi_table());
 
   // TODO: take essential PI table from generator & solve (using Petricks?)
+  QM::sMintermMap sop(pi_table.solve());
 
-  return *input_map_.get_minterms();
+  return sop;
 }
 
 QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
@@ -71,8 +72,8 @@ QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
   // TODO: create essential PI table from prime implicants, which will be returned to main process
   // function
 
-  // QM::PrimeImplicants pi_table(prime_implicants);
-  // return pi_table;
+  QM::PrimeImplicants pi_table(prime_implicants, input_map_.get_minterms());
+  return pi_table;
 }
 
 // this method should recursively iterate through each table needed & return the table with combined

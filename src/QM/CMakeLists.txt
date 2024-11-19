@@ -1,6 +1,5 @@
 add_library(QM STATIC
-# boolean_function.cpp
-minterm_map.cpp
+prime_implicants.cpp
 qm_process_handler.cpp
 )
 

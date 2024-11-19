@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     QM::MintermDCMap map(file_reader->read_file());
     QM::QMProcessHandler qm_processor(map, logger);
 
-    QM::MintermMap final_product(qm_processor.process());
+    QM::sMintermMap final_product(qm_processor.process());
     return EXIT_SUCCESS;
   }
 }

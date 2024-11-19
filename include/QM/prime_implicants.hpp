@@ -25,6 +25,8 @@ class PrimeImplicants
     }
   }
 
+  QM::sMintermMap solve();
+
  private:
   std::map<uint64_t, std::map<QM::bin, bool>> pi_table_;
 };

@@ -21,7 +21,7 @@ class QMProcessHandler
   {
   }
 
-  QM::MintermMap process();
+  QM::sMintermMap process();
 
  private:
   QM::MintermDCMap input_map_;
