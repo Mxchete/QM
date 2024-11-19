@@ -10,7 +10,10 @@ namespace QM
 class PrimeImplicants
 {
  public:
-  PrimeImplicants(QM::tabular_terms& prime_implicants, QM::sMintermMap minterms)
+  PrimeImplicants(QM::tabular_terms& prime_implicants,
+                  QM::sMintermMap minterms,
+                  std::shared_ptr<IO::Logger> logger)
+      : logger_(std::move(logger))
   {
     for (auto& minterm : minterms->get())
     {
@@ -19,7 +22,7 @@ class PrimeImplicants
       {
         for (auto& term : term_list.second)
         {
-          pi_table_[minterm.first].emplace(term.second, false);
+          pi_table_[minterm.second][term.second] = covers(minterm.second, term.second);
         }
       }
     }
@@ -28,7 +31,12 @@ class PrimeImplicants
   QM::sMintermMap solve();
 
  private:
-  std::map<uint64_t, std::map<QM::bin, bool>> pi_table_;
+  std::map<QM::bin, std::map<QM::bin, bool>> pi_table_;
+  std::vector<QM::bin> essential_pi_;
+  std::shared_ptr<IO::Logger> logger_;
+
+  void get_essential_pi();
+  bool covers(const QM::bin& num_one, const QM::bin& num_two);
 };
 }  // namespace QM
 
