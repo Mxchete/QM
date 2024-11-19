@@ -16,7 +16,7 @@ namespace QM
 class QMProcessHandler
 {
  public:
-  QMProcessHandler(MintermDCMap& map, std::shared_ptr<IO::Logger> logger)
+  QMProcessHandler(sBooleanFunction map, std::shared_ptr<IO::Logger> logger)
       : input_map_(map), logger_(logger)
   {
   }
@@ -24,7 +24,7 @@ class QMProcessHandler
   QM::sMintermMap process();
 
  private:
-  QM::MintermDCMap input_map_;
+  QM::sBooleanFunction input_map_;
   std::shared_ptr<IO::Logger> logger_;
   std::mutex thread_lock_;
 

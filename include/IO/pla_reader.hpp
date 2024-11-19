@@ -13,11 +13,11 @@ namespace IO
 {
 namespace File
 {
-class PlaReader : public FileReader<QM::MintermDCMap>
+class PlaReader : public FileReader<QM::sBooleanFunction>
 {
  public:
   explicit PlaReader(const std::string& filename, std::shared_ptr<IO::Logger> logger)
-      : FileReader<QM::MintermDCMap>(filename, logger)
+      : FileReader<QM::sBooleanFunction>(filename, logger)
   {
     QM::sMintermMap minterms(std::make_shared<QM::MintermMap>(logger));
     QM::sMintermMap dc(std::make_shared<QM::MintermMap>(logger));
@@ -28,9 +28,9 @@ class PlaReader : public FileReader<QM::MintermDCMap>
  protected:
   bool read_line(const std::string& line) override;
 
-  inline QM::MintermDCMap process() override
+  inline QM::sBooleanFunction process() override
   {
-    return *minterm_dc_map_;
+    return minterm_dc_map_;
   }
 
  private:

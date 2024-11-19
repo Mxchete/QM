@@ -13,12 +13,12 @@ QM::sMintermMap QM::QMProcessHandler::process()
 {
   logger_->trace("QMProcessHandler::Received the following map:");
   logger_->trace("Minterms:");
-  for (auto term : input_map_.get_minterms()->get())
+  for (auto term : input_map_->get_minterms()->get())
   {
     logger_->trace(std::to_string(term.first));
   }
   logger_->trace("Dont Care:");
-  for (auto term : input_map_.get_dont_care_terms()->get())
+  for (auto term : input_map_->get_dont_care_terms()->get())
   {
     logger_->trace(std::to_string(term.first));
   }
@@ -38,8 +38,8 @@ QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
   // binary representation of the minterm, and values that are maps to sets of combined minterms
   // (keys) and their binary representation (vectors whose values are 0, 1, or dc)
   QM::tabular_terms table;
-  add_terms_to_table(table, input_map_.get_minterms());
-  add_terms_to_table(table, input_map_.get_dont_care_terms());
+  add_terms_to_table(table, input_map_->get_minterms());
+  add_terms_to_table(table, input_map_->get_dont_care_terms());
 
   QM::tabular_terms prime_implicants = QM::QMProcessHandler::find_pi(table);
 
@@ -72,7 +72,7 @@ QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
   // TODO: create essential PI table from prime implicants, which will be returned to main process
   // function
 
-  QM::PrimeImplicants pi_table(prime_implicants, input_map_.get_minterms());
+  QM::PrimeImplicants pi_table(prime_implicants, input_map_->get_minterms());
   return pi_table;
 }
 
@@ -144,7 +144,7 @@ void QM::QMProcessHandler::add_terms_to_table(QM::tabular_terms& table, const QM
     auto int_val = term.first;
     auto& bin_rep = term.second;
     logger_->trace("QMProcessHandler::For term: " + std::to_string(int_val));
-    uint64_t size = input_map_.input_size();
+    uint64_t size = input_map_->input_size();
     logger_->trace("QMProcessHandler::Size is: " + std::to_string(size));
     uint64_t num_ones = QM::QMUtil::get_bin_ones(int_val);
     logger_->trace("QMProcessHandler::Number of ones is: " + std::to_string(num_ones));

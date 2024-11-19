@@ -98,11 +98,11 @@ int main(int argc, char** argv)
       logger = std::make_shared<IO::Logger>(lvl);
     }
     std::string file_name = argv[2];
-    auto file_reader = IO::File::FileReaderFactory<QM::MintermDCMap>::create(file_name, logger);
+    auto file_reader = IO::File::FileReaderFactory<QM::sBooleanFunction>::create(file_name, logger);
 
     logger->info("File reader object created");
 
-    QM::MintermDCMap map(file_reader->read_file());
+    QM::sBooleanFunction map(file_reader->read_file());
     QM::QMProcessHandler qm_processor(map, logger);
 
     QM::sMintermMap final_product(qm_processor.process());
