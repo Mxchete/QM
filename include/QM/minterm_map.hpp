@@ -33,6 +33,11 @@ class MintermMap
   {
   }
 
+  inline uint64_t size()
+  {
+    return map_.size();
+  }
+
   inline void add_inputs(const std::vector<std::string>& inputs)
   {
     input_ = inputs;

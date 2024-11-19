@@ -35,7 +35,7 @@ void print_help()
   std::cout << "Log level  : --loglevel, -l   | Specifies the level of logs that will be printed "
                "(TRACE, DEBUG, INFO, WARN, ERROR, FATAL) Default=INFO"
             << std::endl;
-  std::cout << "Log path   : --logpath, -i    | Specifies output path for logs, otherwise "
+  std::cout << "Log path   : --logpath, -p    | Specifies output path for logs, otherwise "
                "prints logs to "
                "stdout only"
             << std::endl;

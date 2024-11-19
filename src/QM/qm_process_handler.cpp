@@ -64,12 +64,13 @@ QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
         cmb_term_str += std::to_string(imp.first[i]) + ", ";
       }
       cmb_term_str += ">";
-      logger_->trace(cmb_term_str + ": " + str);
+      logger_->debug(cmb_term_str + ": " + str);
     }
   }
 
   // TODO: create essential PI table from prime implicants, which will be returned to main process
   // function
+
   // QM::PrimeImplicants pi_table(prime_implicants);
   // return pi_table;
 }
@@ -88,7 +89,7 @@ QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
       {
         str += std::to_string(state) + " ";
       }
-      logger_->trace(std::to_string(tmp.first) + ": " + str);
+      logger_->debug(std::to_string(tmp.first) + ": " + str);
     }
   }
   std::vector<QM::dual_rep> used_terms;
@@ -259,11 +260,11 @@ void QM::QMProcessHandler::thread_processing(
                         [&](const auto& e) { return e.second == combined->second; }) == 0)
       {
         local_table[new_num_ones].emplace(combined->first, combined->second);
-        logger_->debug("QMProcessHandler::Emplaced term");
+        logger_->trace("QMProcessHandler::Emplaced term");
       }
       else
       {
-        logger_->debug("QMProcessHandler::Term repeated!");
+        logger_->trace("QMProcessHandler::Term repeated!");
       }
     }
   }

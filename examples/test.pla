@@ -1,0 +1,7 @@
+.i 8
+.o 1
+.ilb A B C D E F G H
+.ob F
+-------- 1
+.e
+
