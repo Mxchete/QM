@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
 
 namespace IO
 {
@@ -126,6 +127,7 @@ class Logger
   std::ostream* out_;
   std::unique_ptr<std::ofstream> file_;
   LogLevel log_level_;
+  std::mutex write_lock_;
 
   inline void log(const std::string& level, const std::string& message)
   {
@@ -135,6 +137,7 @@ class Logger
     std::tm utc_time = *std::gmtime(&now_c);
     if (out_)
     {
+      std::lock_guard<std::mutex> lock(write_lock_);
       *out_ << "[" << level << "][" << std::put_time(&utc_time, "%Y-%m-%d %H:%M:%S") << "] "
             << message << std::endl;
     }

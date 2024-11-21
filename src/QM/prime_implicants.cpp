@@ -3,7 +3,7 @@
 
 QM::sMintermMap QM::PrimeImplicants::solve()
 {
-  logger_->trace("PrimeImplicants::Table:");
+  // logger_->trace("PrimeImplicants::Table:");
 }
 
 bool QM::PrimeImplicants::covers(const QM::bin& num_one, const QM::bin& num_two)
@@ -34,7 +34,8 @@ void QM::PrimeImplicants::get_essential_pi()
 {
   for (auto& minterm : pi_table_)
   {
-    if (std::count(minterm.second.begin(), minterm.second.end(), true) == 1)
+    if (std::count_if(minterm.second.begin(), minterm.second.end(),
+                      [&](const auto& e) { return e.second == true; }) == 0)
     {
       // push back essential pi & erase minterm since we have covered it
     }

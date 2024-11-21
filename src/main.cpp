@@ -97,6 +97,7 @@ int main(int argc, char** argv)
     {
       logger = std::make_shared<IO::Logger>(lvl);
     }
+    logger->info("Main::Logger successfully created");
     std::string file_name = argv[2];
     auto file_reader = IO::File::FileReaderFactory<QM::sBooleanFunction>::create(file_name, logger);
 
@@ -106,6 +107,7 @@ int main(int argc, char** argv)
     QM::QMProcessHandler qm_processor(map, logger);
 
     QM::sMintermMap final_product(qm_processor.process());
+    logger->info("Program has successfully finished");
     return EXIT_SUCCESS;
   }
 }

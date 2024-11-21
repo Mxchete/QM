@@ -15,6 +15,7 @@ class PrimeImplicants
                   std::shared_ptr<IO::Logger> logger)
       : logger_(std::move(logger))
   {
+    logger_->debug("PrimeImplicants::Received raw prime implicants from table");
     for (auto& minterm : minterms->get())
     {
       auto& term_int = minterm.first;
@@ -26,6 +27,7 @@ class PrimeImplicants
         }
       }
     }
+    logger_->debug("PrimeImplicants::initial prime implicants table successfully created from raw");
   }
 
   QM::sMintermMap solve();
