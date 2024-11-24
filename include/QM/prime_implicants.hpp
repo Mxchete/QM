@@ -22,6 +22,19 @@ class PrimeImplicants
       auto& term_int = minterm.first;
       for (auto& term : prime_implicants)
       {
+        std::string str;
+        for (auto& bin : term.second)
+        {
+          if (bin == QM::States::dc)
+          {
+            str += '-';
+          }
+          else
+          {
+            str += std::to_string(bin);
+          }
+        }
+        logger_->debug(str);
         pi_table_[minterm.second][term.second] = covers(minterm, term);
       }
     }

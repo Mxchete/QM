@@ -39,8 +39,8 @@ QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
   QM::combined_list prime_implicants = QM::QMProcessHandler::find_pi(table);
 
   // Create the PI table (created in PI constructor)
-  // QM::PrimeImplicants pi_table(prime_implicants, input_map_->get_minterms(), logger_);
-  // return pi_table;
+  QM::PrimeImplicants pi_table(prime_implicants, input_map_->get_minterms(), logger_);
+  return pi_table;
 }
 
 // this method should recursively iterate through each table needed & return the table with combined
