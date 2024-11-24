@@ -4,6 +4,7 @@
 QM::sMintermMap QM::PrimeImplicants::solve()
 {
   logger_->trace("PrimeImplicants::Table:");
+  get_essential_pi();
 }
 
 bool QM::PrimeImplicants::covers(const std::pair<uint64_t, QM::bin>& num_one,
@@ -24,12 +25,33 @@ bool QM::PrimeImplicants::covers(const std::pair<uint64_t, QM::bin>& num_one,
 
 void QM::PrimeImplicants::get_essential_pi()
 {
-  for (auto& minterm : pi_table_)
+  std::vector<QM::bin> removable_minterms;
+  for (auto& map : pi_table_)
   {
-    if (std::count_if(minterm.second.begin(), minterm.second.end(),
-                      [&](const auto& e) { return e.second == true; }) == 0)
+    std::vector<std::pair<QM::bin, bool>> num_covers;
+    std::copy_if(map.second.begin(), map.second.end(), std::back_inserter(num_covers),
+                 [](const auto& val) { return val.second; });
+    if (num_covers.size() == 1)
     {
-      // push back essential pi & erase minterm since we have covered it
+      essential_pi_.push_back(num_covers[0].first);
+      removable_minterms.push_back(map.first);
     }
   }
+
+  logger_->trace("Old size: " + std::to_string(pi_table_.size()));
+  for (const auto& removable : removable_minterms)
+  {
+    pi_table_.erase(removable);
+  }
+  logger_->trace("New size: " + std::to_string(pi_table_.size()));
+
+  logger_->trace("Old Number of implicants: " + std::to_string(pi_table_.begin()->second.size()));
+  for (auto& minterm : pi_table_)
+  {
+    for (const auto& removable_pi : essential_pi_)
+    {
+      minterm.second.erase(removable_pi);
+    }
+  }
+  logger_->trace("New Number of implicants: " + std::to_string(pi_table_.begin()->second.size()));
 }
