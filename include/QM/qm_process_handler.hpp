@@ -36,6 +36,9 @@ class QMProcessHandler
                          QM::tabular_terms& current_table,
                          std::vector<QM::dual_rep>& used_terms,
                          QM::tabular_terms& new_table);
+  void process_used_terms(std::pair<const uint64_t, QM::combined_list>& terms_for_num_ones,
+                          std::vector<QM::dual_rep>& used_terms,
+                          QM::combined_list& finished_table);
 };
 }  // namespace QM
 

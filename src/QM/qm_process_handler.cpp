@@ -79,21 +79,20 @@ QM::combined_list QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
 
   logger_->trace("Used terms size: " + std::to_string(used_terms.size()));
   // Now we add all the terms we couldn't combine
+  std::vector<std::thread> used_terms_processing_threads;
   for (std::pair<const uint64_t, QM::combined_list>& terms_for_num_ones : current_table)
   {
-    auto num_ones = terms_for_num_ones.first;
-    auto& terms = terms_for_num_ones.second;
-    // for each term in the given number of ones
-    for (auto& comparison_term : terms)
-    {
-      // if comparison_term not in used_terms, add it to finished_table
-      if (std::count_if(used_terms.begin(), used_terms.end(),
-                        [&](const auto& e) { return e.second == comparison_term.second; }) == 0)
-      {
-        finished_table.push_back(comparison_term);
-      }
-    }
+    used_terms_processing_threads.push_back(
+        std::thread(&QM::QMProcessHandler::process_used_terms, this, std ::ref(terms_for_num_ones),
+                    std::ref(used_terms), std::ref(finished_table)));
   }
+  logger_->debug("Created all threads for used terms");
+
+  for (auto& thread : used_terms_processing_threads)
+  {
+    thread.join();
+  }
+  logger_->debug("All threads rejoined");
 
   return finished_table;
 }
@@ -241,6 +240,26 @@ void QM::QMProcessHandler::thread_processing(
     {
       std::lock_guard<std::mutex> lock(thread_lock_);
       new_table[set_from_num_ones.first].push_back(term);
+    }
+  }
+}
+
+void QM::QMProcessHandler::process_used_terms(
+    std::pair<const uint64_t, QM::combined_list>& terms_for_num_ones,
+    std::vector<QM::dual_rep>& used_terms,
+    QM::combined_list& finished_table)
+{
+  auto num_ones = terms_for_num_ones.first;
+  auto& terms = terms_for_num_ones.second;
+  // for each term in the given number of ones
+  for (auto& comparison_term : terms)
+  {
+    // if comparison_term not in used_terms, add it to finished_table
+    if (std::count_if(used_terms.begin(), used_terms.end(),
+                      [&](const auto& e) { return e.second == comparison_term.second; }) == 0)
+    {
+      std::lock_guard<std::mutex> lock(thread_lock_);
+      finished_table.push_back(comparison_term);
     }
   }
 }
