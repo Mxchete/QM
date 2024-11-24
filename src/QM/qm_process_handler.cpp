@@ -36,16 +36,16 @@ QM::PrimeImplicants QM::QMProcessHandler::generate_pi_table()
   add_terms_to_table(table, input_map_->get_dont_care_terms());
 
   // From the recursive function, we find the raw PI table that we can process into PI class
-  QM::tabular_terms prime_implicants = QM::QMProcessHandler::find_pi(table);
+  QM::combined_list prime_implicants = QM::QMProcessHandler::find_pi(table);
 
   // Create the PI table (created in PI constructor)
-  QM::PrimeImplicants pi_table(prime_implicants, input_map_->get_minterms(), logger_);
-  return pi_table;
+  // QM::PrimeImplicants pi_table(prime_implicants, input_map_->get_minterms(), logger_);
+  // return pi_table;
 }
 
 // this method should recursively iterate through each table needed & return the table with combined
 // terms + terms it couldn't combine for the given iteration of the function
-QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table)
+QM::combined_list QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table)
 {
   // used_terms holds all terms we were able to combine
   std::vector<QM::dual_rep> used_terms;
@@ -54,8 +54,7 @@ QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
   std::vector<std::thread> processing_threads;
   logger_->debug("Started threaded processing for current table");
   // for each number of ones in the table
-  for (std::pair<const uint64_t, std::map<std::vector<uint64_t>, QM::bin>>& terms_for_num_ones :
-       current_table)
+  for (std::pair<const uint64_t, QM::combined_list>& terms_for_num_ones : current_table)
   {
     // create threads for processing num ones, at most n threads are created but n - 1 threads are
     // used, given input with n variables. For every iteration of this find_pi function fewer
@@ -72,30 +71,26 @@ QM::tabular_terms QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
   }
   logger_->debug("All threads rejoined");
 
-  QM::tabular_terms finished_table;
+  QM::combined_list finished_table;
   if (new_table.size() != 0)
   {
-    // finished table will send the new combined table back to this function, so long as we were
-    // able to combine variables. This means we can recursively comine terms & get their tables to
-    // add to our final product
     finished_table = find_pi(new_table);
   }
 
   logger_->trace("Used terms size: " + std::to_string(used_terms.size()));
   // Now we add all the terms we couldn't combine
-  for (std::pair<const uint64_t, std::map<std::vector<uint64_t>, QM::bin>>& terms_for_num_ones :
-       current_table)
+  for (std::pair<const uint64_t, QM::combined_list>& terms_for_num_ones : current_table)
   {
     auto num_ones = terms_for_num_ones.first;
     auto& terms = terms_for_num_ones.second;
     // for each term in the given number of ones
-    for (std::pair<const std::vector<uint64_t>, QM::bin>& comparison_term : terms)
+    for (auto& comparison_term : terms)
     {
       // if comparison_term not in used_terms, add it to finished_table
       if (std::count_if(used_terms.begin(), used_terms.end(),
                         [&](const auto& e) { return e.second == comparison_term.second; }) == 0)
       {
-        finished_table[num_ones].emplace(comparison_term);
+        finished_table.push_back(comparison_term);
       }
     }
   }
@@ -118,7 +113,8 @@ void QM::QMProcessHandler::add_terms_to_table(QM::tabular_terms& table, const QM
     logger_->trace("QMProcessHandler::Generated minterm of size " + std::to_string(bin_rep.size()));
     std::vector<uint64_t> combined_term_key;
     combined_term_key.push_back(int_val);
-    table[num_ones].emplace(combined_term_key, bin_rep);
+    auto pair = std::make_pair(combined_term_key, bin_rep);
+    table[num_ones].push_back(pair);
   }
 }
 
@@ -186,7 +182,7 @@ std::optional<QM::dual_rep> QM::QMProcessHandler::combine(const QM::dual_rep& nu
 }
 
 void QM::QMProcessHandler::thread_processing(
-    std::pair<const uint64_t, std::map<std::vector<uint64_t>, QM::bin>>& terms_for_num_ones,
+    std::pair<const uint64_t, QM::combined_list>& terms_for_num_ones,
     QM::tabular_terms& current_table,
     std::vector<QM::dual_rep>& used_terms,
     QM::tabular_terms& new_table)
@@ -207,11 +203,10 @@ void QM::QMProcessHandler::thread_processing(
   // We have finished copying from shared data for now
   thread_lock_.unlock();
   // for each term in the given number of ones
-  for (std::pair<const std::vector<uint64_t>, QM::bin>& comparison_term : terms)
+  for (auto& comparison_term : terms)
   {
     // for each term in next number of ones
-    for (std::pair<const std::vector<uint64_t>, QM::bin>& next_term :
-         next_terms_for_num_ones->second)
+    for (auto& next_term : next_terms_for_num_ones->second)
     {
       std::optional<QM::dual_rep> combined = combine(comparison_term, next_term);
       if (!combined)
@@ -224,7 +219,7 @@ void QM::QMProcessHandler::thread_processing(
       if (std::count_if(local_table[new_num_ones].begin(), local_table[new_num_ones].end(),
                         [&](const auto& e) { return e.second == combined->second; }) == 0)
       {
-        local_table[new_num_ones].emplace(combined->first, combined->second);
+        local_table[new_num_ones].push_back(*combined);
         logger_->trace("QMProcessHandler::Emplaced term");
       }
       else
@@ -245,7 +240,7 @@ void QM::QMProcessHandler::thread_processing(
     for (auto& term : set_from_num_ones.second)
     {
       std::lock_guard<std::mutex> lock(thread_lock_);
-      new_table[set_from_num_ones.first].emplace(term.first, term.second);
+      new_table[set_from_num_ones.first].push_back(term);
     }
   }
 }

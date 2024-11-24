@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <map>
-#include <set>
+#include <unordered_map>
 #include <vector>
 
 namespace QM
@@ -19,7 +19,9 @@ enum States
 using bin = std::vector<States>;
 using combined_terms = std::vector<uint64_t>;
 using dual_rep = std::pair<combined_terms, bin>;
-using tabular_terms = std::map<uint64_t, std::map<combined_terms, bin>>;
+using combined_list = std::vector<dual_rep>;
+using dual_list = std::map<combined_terms, bin>;
+using tabular_terms = std::map<uint64_t, combined_list>;
 }  // namespace QM
 
 #endif

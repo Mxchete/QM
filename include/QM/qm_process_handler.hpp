@@ -29,14 +29,13 @@ class QMProcessHandler
   std::mutex thread_lock_;
 
   PrimeImplicants generate_pi_table();
-  QM::tabular_terms find_pi(QM::tabular_terms& current_table);
+  QM::combined_list find_pi(QM::tabular_terms& current_table);
   void add_terms_to_table(QM::tabular_terms& table, QM::sMintermMap terms);
   std::optional<QM::dual_rep> combine(const QM::dual_rep& num_one, const QM::dual_rep& num_two);
-  void thread_processing(
-      std::pair<const uint64_t, std::map<std::vector<uint64_t>, QM::bin>>& terms_for_num_ones,
-      QM::tabular_terms& current_table,
-      std::vector<QM::dual_rep>& used_terms,
-      QM::tabular_terms& new_table);
+  void thread_processing(std::pair<const uint64_t, QM::combined_list>& terms_for_num_ones,
+                         QM::tabular_terms& current_table,
+                         std::vector<QM::dual_rep>& used_terms,
+                         QM::tabular_terms& new_table);
 };
 }  // namespace QM
 

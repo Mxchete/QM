@@ -1,2 +1,2 @@
 # QM
-quine-mcclusky implementation in c++
+quine-mccluskey implementation in c++

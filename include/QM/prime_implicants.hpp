@@ -1,6 +1,7 @@
 #ifndef PRIME_IMPLICANTS_HPP_
 #define PRIME_IMPLICANTS_HPP_
 
+#include <cstdint>
 #include <map>
 #include "QM/minterm_map.hpp"
 #include "QM/types.hpp"
@@ -10,7 +11,7 @@ namespace QM
 class PrimeImplicants
 {
  public:
-  PrimeImplicants(QM::tabular_terms& prime_implicants,
+  PrimeImplicants(QM::combined_list& prime_implicants,
                   QM::sMintermMap minterms,
                   std::shared_ptr<IO::Logger> logger)
       : logger_(std::move(logger))
@@ -19,12 +20,9 @@ class PrimeImplicants
     for (auto& minterm : minterms->get())
     {
       auto& term_int = minterm.first;
-      for (auto& term_list : prime_implicants)
+      for (auto& term : prime_implicants)
       {
-        for (auto& term : term_list.second)
-        {
-          pi_table_[minterm.second][term.second] = covers(minterm.second, term.second);
-        }
+        pi_table_[minterm.second][term.second] = covers(minterm, term);
       }
     }
     logger_->debug("PrimeImplicants::initial prime implicants table successfully created from raw");
@@ -38,7 +36,7 @@ class PrimeImplicants
   std::shared_ptr<IO::Logger> logger_;
 
   void get_essential_pi();
-  bool covers(const QM::bin& num_one, const QM::bin& num_two);
+  bool covers(const std::pair<uint64_t, QM::bin>& num_one, const QM::dual_rep& num_two);
 };
 }  // namespace QM
 

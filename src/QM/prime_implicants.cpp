@@ -3,31 +3,23 @@
 
 QM::sMintermMap QM::PrimeImplicants::solve()
 {
-  // logger_->trace("PrimeImplicants::Table:");
+  logger_->trace("PrimeImplicants::Table:");
 }
 
-bool QM::PrimeImplicants::covers(const QM::bin& num_one, const QM::bin& num_two)
+bool QM::PrimeImplicants::covers(const std::pair<uint64_t, QM::bin>& num_one,
+                                 const QM::dual_rep& num_two)
 {
-  if (num_one.size() != num_two.size())
+  if (num_one.second.size() != num_two.second.size())
   {
     logger_->error("Cannot cover due to size mismatch");
     return false;
   }
 
-  for (int i = 0; i < num_one.size(); i++)
+  if (std::find(num_two.first.begin(), num_two.first.end(), num_one.first) != num_two.first.end())
   {
-    if (num_one[i] == num_two[i])
-    {
-      continue;
-    }
-    if (num_one[i] == QM::States::dc || num_two[i] == QM::States::dc)
-    {
-      continue;
-    }
-    return false;
+    return true;
   }
-
-  return true;
+  return false;
 }
 
 void QM::PrimeImplicants::get_essential_pi()
