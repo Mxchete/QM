@@ -16,25 +16,28 @@ class PrimeImplicants
                   std::shared_ptr<IO::Logger> logger)
       : logger_(std::move(logger))
   {
+    for (auto& term : prime_implicants)
+    {
+      std::string str;
+      for (auto& bin : term.second)
+      {
+        if (bin == QM::States::dc)
+        {
+          str += '-';
+        }
+        else
+        {
+          str += std::to_string(bin);
+        }
+      }
+      logger_->debug(str);
+    }
     logger_->debug("PrimeImplicants::Received raw prime implicants from table");
     for (auto& minterm : minterms->get())
     {
       auto& term_int = minterm.first;
       for (auto& term : prime_implicants)
       {
-        std::string str;
-        for (auto& bin : term.second)
-        {
-          if (bin == QM::States::dc)
-          {
-            str += '-';
-          }
-          else
-          {
-            str += std::to_string(bin);
-          }
-        }
-        logger_->debug(str);
         pi_table_[minterm.second][term.second] = covers(minterm, term);
       }
     }
