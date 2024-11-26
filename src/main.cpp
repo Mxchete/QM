@@ -103,10 +103,11 @@ int main(int argc, char** argv)
 
     logger->info("File reader object created");
 
-    QM::sBooleanFunction map(file_reader->read_file());
+    QM::sBooleanFunction map = file_reader->read_file();
     QM::QMProcessHandler qm_processor(map, logger);
 
-    QM::sMintermMap final_product(qm_processor.process());
+    QM::sMintermMap final_product = qm_processor.process();
+    IO::File::PlaWriter out_file(output_file, logger);
     logger->info("Program has successfully finished");
     return EXIT_SUCCESS;
   }

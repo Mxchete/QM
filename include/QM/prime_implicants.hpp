@@ -52,6 +52,10 @@ class PrimeImplicants
   std::shared_ptr<IO::Logger> logger_;
 
   void get_essential_pi();
+  void simplify_row_dominance();
+  void simplify_column_dominance();
+  void petricks_method();
+  QM::sMintermMap convert_to_minterm_map();
   bool covers(const std::pair<uint64_t, QM::bin>& num_one, const QM::dual_rep& num_two);
 };
 }  // namespace QM

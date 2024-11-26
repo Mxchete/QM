@@ -5,6 +5,11 @@ QM::sMintermMap QM::PrimeImplicants::solve()
 {
   logger_->trace("PrimeImplicants::Table:");
   get_essential_pi();
+  simplify_row_dominance();
+  simplify_column_dominance();
+  petricks_method();
+
+  return convert_to_minterm_map();
 }
 
 bool QM::PrimeImplicants::covers(const std::pair<uint64_t, QM::bin>& num_one,
@@ -36,7 +41,24 @@ void QM::PrimeImplicants::get_essential_pi()
       essential_pi_.push_back(num_covers[0].first);
       removable_minterms.push_back(map.first);
     }
+
+    for (auto& other_terms : pi_table_)
+    {
+      if (other_terms == map)
+      {
+        continue;
+      }
+      std::vector<std::pair<QM::bin, bool>> cover_list;
+      std::copy_if(other_terms.second.begin(), other_terms.second.end(),
+                   std::back_inserter(num_covers), [](const auto& val) { return val.second; });
+      // essentially find if one cover list is a subset of the other
+    }
   }
+
+  // row dominance here? or maybe above loop (add another for loop iterating through pi table again)
+  // for (auto& map : pi_table_)
+  // {
+  // }
 
   logger_->trace("Old size: " + std::to_string(pi_table_.size()));
   for (const auto& removable : removable_minterms)
@@ -54,4 +76,24 @@ void QM::PrimeImplicants::get_essential_pi()
     }
   }
   logger_->trace("New Number of implicants: " + std::to_string(pi_table_.begin()->second.size()));
+}
+
+// maybe not needed if its better to do while finding epi
+void QM::PrimeImplicants::simplify_row_dominance()
+{
+}
+
+// also may be able to do while finding epi
+void QM::PrimeImplicants::simplify_column_dominance()
+{
+}
+
+// probably still need
+void QM::PrimeImplicants::petricks_method()
+{
+  // maybe first create a map of pi to int "names"
+}
+
+QM::sMintermMap QM::PrimeImplicants::convert_to_minterm_map()
+{
 }
