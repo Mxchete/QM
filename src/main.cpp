@@ -6,6 +6,7 @@
 #include "IO/file_reader.hpp"
 #include "IO/file_reader_factory.hpp"
 #include "IO/logger.hpp"
+#include "IO/pla_writer.hpp"
 #include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"
 #include "QM/qm_process_handler.hpp"

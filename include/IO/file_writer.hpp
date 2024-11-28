@@ -42,7 +42,7 @@ class FileWriter
   std::unique_ptr<std::ofstream> file_;
   uint64_t line_num_ = 0;
 
-  virtual T process() = 0;
+  virtual std::string process(T& raw_object) = 0;
 };
 }  // namespace File
 }  // namespace IO

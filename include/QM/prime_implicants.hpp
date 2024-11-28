@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <map>
+#include <set>
 #include "QM/minterm_map.hpp"
 #include "QM/types.hpp"
 
@@ -48,7 +49,7 @@ class PrimeImplicants
 
  private:
   std::map<QM::bin, std::map<QM::bin, bool>> pi_table_;
-  std::vector<QM::bin> essential_pi_;
+  std::set<QM::bin> essential_pi_;
   std::shared_ptr<IO::Logger> logger_;
 
   void get_essential_pi();
@@ -57,6 +58,8 @@ class PrimeImplicants
   void petricks_method();
   QM::sMintermMap convert_to_minterm_map();
   bool covers(const std::pair<uint64_t, QM::bin>& num_one, const QM::dual_rep& num_two);
+  std::set<std::set<uint64_t>> pos_to_sop(
+      const std::vector<std::set<std::set<uint64_t>>>& equation);
 };
 }  // namespace QM
 
