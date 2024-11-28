@@ -1,7 +1,11 @@
 #include "QM/prime_implicants.hpp"
+#include <algorithm>
+#include <climits>
 #include <cstdint>
 #include <unordered_map>
+#include "QM/QMUtil.hpp"
 #include "QM/minterm_map.hpp"
+#include "QM/types.hpp"
 
 QM::sMintermMap QM::PrimeImplicants::solve()
 {
@@ -134,6 +138,71 @@ void QM::PrimeImplicants::petricks_method()
   }
 
   // reduce equation to sop
+  const auto sop_eq = pos_to_sop(equation);
+  // now pick the lowest terms
+  std::sort(sop_eq.begin(), sop_eq.end(),
+            [](const std::set<uint64_t>& a, const std::set<uint64_t>& b)
+            { return a.size() < b.size(); });
+  auto min_size = sop_eq.begin()->size();
+  std::vector<std::set<uint64_t>> smallest_terms;
+  for (auto& small_term : sop_eq)
+  {
+    if (small_term.size() > min_size)
+    {
+      break;
+    }
+    smallest_terms.push_back(small_term);
+  }
+
+  std::set<uint64_t> selection = *smallest_terms.begin();
+  uint64_t lowest_num_literals = ULLONG_MAX;
+  for (const auto& potential_selection : smallest_terms)
+  {
+    std::vector<bool> literal_has_appeared(num_inputs_, false);
+    std::vector<bool> inv_literal_has_appeared(num_inputs_, false);
+    for (const auto& Px : potential_selection)
+    {
+      const auto& bin_rep = int_to_bin[Px];
+      for (int i = 0; i < num_inputs_; i++)
+      {
+        try
+        {
+          if (bin_rep[i] == QM::States::one)
+          {
+            literal_has_appeared[i] = true;
+          }
+          else if (bin_rep[i] == QM::States::zero)
+          {
+            inv_literal_has_appeared[i] = false;
+          }
+        }
+        catch (...)
+        {
+          logger_->fatal("Could not get literals of term");
+        }
+      }
+    }
+
+    // for literal & inv literal, count truth
+    const auto number_of_literals =
+        std::count_if(literal_has_appeared.begin(), literal_has_appeared.end(),
+                      [&](const auto& e) { return e; }) +
+        std::count_if(inv_literal_has_appeared.begin(), inv_literal_has_appeared.end(),
+                      [&](const auto& e) { return e; });
+
+    if (number_of_literals < lowest_num_literals)
+    {
+      lowest_num_literals = number_of_literals;
+      selection = potential_selection;
+    }
+  }
+
+  // push all prime implicants from the smallest term
+  for (const auto& implicant_int : selection)
+  {
+    const auto& bin_rep = int_to_bin[implicant_int];
+    essential_pi_.emplace(bin_rep);
+  }
 }
 
 std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(

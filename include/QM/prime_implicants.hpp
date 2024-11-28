@@ -15,7 +15,7 @@ class PrimeImplicants
   PrimeImplicants(QM::combined_list& prime_implicants,
                   QM::sMintermMap minterms,
                   std::shared_ptr<IO::Logger> logger)
-      : logger_(std::move(logger))
+      : logger_(std::move(logger)), num_inputs_(minterms->input_size())
   {
     for (auto& term : prime_implicants)
     {
@@ -51,6 +51,7 @@ class PrimeImplicants
   std::map<QM::bin, std::map<QM::bin, bool>> pi_table_;
   std::set<QM::bin> essential_pi_;
   std::shared_ptr<IO::Logger> logger_;
+  uint64_t num_inputs_ = 0;
 
   void get_essential_pi();
   void simplify_row_dominance();
