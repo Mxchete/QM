@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <climits>
 #include <cstdint>
+#include <memory>
 #include <unordered_map>
 #include "QM/QMUtil.hpp"
 #include "QM/minterm_map.hpp"
@@ -52,35 +53,26 @@ void QM::PrimeImplicants::get_essential_pi()
 
     // TODO: Fix this
     // column dominance
-    // for (auto& other_terms : pi_table_)
-    // {
-    //   if (other_terms == map || std::find(removable_minterms.begin(), removable_minterms.end(),
-    //                                       other_terms.first) != removable_minterms.end())
-    //   {
-    //     continue;
-    //   }
-    //   std::vector<std::pair<QM::bin, bool>> cover_list;
-    //   // essentially find if one cover list is a subset of the other
-    //   std::copy_if(other_terms.second.begin(), other_terms.second.end(),
-    //                std::back_inserter(cover_list),
-    //                [&](const auto& val) { return val.second && map.second[val.first]; });
-    //   if (cover_list.size() == num_covers.size())
-    //   {
-    //     std::string dbg;
-    //     for (const auto& bit : num_covers[0].first)
-    //     {
-    //       dbg += std::to_string(bit);
-    //     }
-    //     logger_->trace(dbg);
-    //     essential_pi_.emplace(num_covers[0].first);
-    //   }
-    // }
+    for (auto& other_terms : pi_table_)
+    {
+      if (other_terms == map)
+      {
+        continue;
+      }
+      std::vector<std::pair<QM::bin, bool>> cover_list;
+      // essentially find if one cover list is a subset of the other
+      std::copy_if(other_terms.second.begin(), other_terms.second.end(),
+                   std::back_inserter(cover_list),
+                   [&](const auto& val) { return val.second && map.second[val.first]; });
+      logger_->trace("cov: " + std::to_string(cover_list.size()) +
+                     ", num: " + std::to_string(num_covers.size()));
+      if (cover_list.size() == num_covers.size())
+      {
+        essential_pi_.emplace(num_covers[0].first);
+        removable_minterms.push_back(map.first);
+      }
+    }
   }
-
-  // row dominance here? or maybe above loop (add another for loop iterating through pi table again)
-  // for (auto& map : pi_table_)
-  // {
-  // }
 
   logger_->trace("Old size: " + std::to_string(pi_table_.size()));
   for (const auto& removable : removable_minterms)
@@ -100,28 +92,18 @@ void QM::PrimeImplicants::get_essential_pi()
   logger_->trace("New Number of implicants: " + std::to_string(pi_table_.begin()->second.size()));
 }
 
-// maybe not needed if its better to do while finding epi
-void QM::PrimeImplicants::simplify_row_dominance()
-{
-  // if (pi_table_.size() == 0)
-  // {
-  //   return;
-  // }
-  // for (const auto& col : pi_table_.begin()->second)
-  // {
-  // }
-}
-
-// also may be able to do while finding epi
-void QM::PrimeImplicants::simplify_column_dominance()
-{
-}
-
 // probably still need
 void QM::PrimeImplicants::petricks_method()
 {
-  if (pi_table_.size() == 0)
+  if (pi_table_.size() == 0 || pi_table_.begin()->second.size() == 0)
   {
+    return;
+  }
+
+  logger_->trace("PI TABLE SZ: " + std::to_string(pi_table_.begin()->second.size()));
+  if (pi_table_.begin()->second.size() == 1)
+  {
+    essential_pi_.emplace(pi_table_.begin()->second.begin()->first);
     return;
   }
   // the initial equation is created correctly
@@ -154,10 +136,12 @@ void QM::PrimeImplicants::petricks_method()
   {
     std::set<std::set<uint64_t>> single_sum;
     logger_->trace("sum");
+    // TODO: Error somewhere in here
     for (const auto& implicant : term.second)
     {
       if (!implicant.second)
       {
+        logger_->trace("Cannot get implicant!");
         continue;
       }
       logger_->trace("adding term: " + std::to_string(bin_to_int[implicant.first]));
@@ -343,4 +327,20 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
 
 QM::sMintermMap QM::PrimeImplicants::convert_to_minterm_map()
 {
+  QM::sMintermMap result = std::make_shared<QM::MintermMap>(input_, output_, logger_);
+  int i = 0;
+  for (const auto& new_term : essential_pi_)
+  {
+    std::string dbg;
+    for (auto& state : new_term)
+    {
+      dbg += std::to_string(state);
+    }
+    logger_->trace("add term: " + std::to_string(i) + ", " + dbg);
+    result->add_onset_term(i, new_term);
+    i += 1;
+  }
+  logger_->trace("Created sMintermMap with " + std::to_string(result->num_terms()) + " minterms");
+
+  return result;
 }

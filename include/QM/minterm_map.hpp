@@ -71,6 +71,13 @@ class MintermMap
     return success;
   }
 
+  inline bool add_onset_term(uint64_t int_val, const QM::bin& bin_rep)
+  {
+    bool success = map_.emplace(int_val, bin_rep).second;
+    num_terms_ += 1;
+    return success;
+  }
+
   inline std::unordered_map<uint64_t, QM::bin> get()
   {
     return std::unordered_map<uint64_t, QM::bin>(map_);
@@ -86,8 +93,13 @@ class MintermMap
     return output_;
   }
 
+  inline uint64_t num_terms()
+  {
+    return num_terms_;
+  }
+
  private:
-  uint64_t num_terms_;
+  uint64_t num_terms_ = 0;
   std::vector<std::string> input_;
   std::string output_;
   std::unordered_map<uint64_t, QM::bin> map_;
