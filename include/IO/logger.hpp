@@ -25,8 +25,12 @@ class Logger
     FATAL
   };
 
-  static LogLevel get_log_level(const std::string& lvl_str)
+  static LogLevel get_log_level(std::string& lvl_str)
   {
+    for (auto& c : lvl_str)
+    {
+      c = toupper(c);
+    }
     if (lvl_str == "TRACE")
     {
       return TRACE;

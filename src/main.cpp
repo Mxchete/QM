@@ -5,8 +5,9 @@
 #include <memory>
 #include "IO/file_reader.hpp"
 #include "IO/file_reader_factory.hpp"
+#include "IO/file_writer.hpp"
 #include "IO/logger.hpp"
-// #include "IO/pla_writer.hpp"
+#include "IO/pla_writer.hpp"
 #include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"
 #include "QM/qm_process_handler.hpp"
@@ -49,7 +50,7 @@ int main(int argc, char** argv)
   int iarg = 0;
   char* filename;
   char* output_file;
-  std::string log_level = "TRACE";
+  std::string log_level = "INFO";
   std::string log_path = "";
 
   // turn off getopt error message
@@ -108,7 +109,9 @@ int main(int argc, char** argv)
     QM::QMProcessHandler qm_processor(map, logger);
 
     QM::sMintermMap final_product = qm_processor.process();
-    // IO::File::PlaWriter out_file(output_file, logger);
+    IO::File::PlaWriter out_file =
+        (output_file) ? IO::File::PlaWriter(output_file, logger) : IO::File::PlaWriter(logger);
+    out_file.write_file(final_product);
     logger->info("Program has successfully finished");
     return EXIT_SUCCESS;
   }
