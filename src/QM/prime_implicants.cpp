@@ -11,9 +11,11 @@ QM::sMintermMap QM::PrimeImplicants::solve()
 {
   logger_->trace("PrimeImplicants::Table:");
   get_essential_pi();
-  simplify_row_dominance();
-  simplify_column_dominance();
+  logger_->trace("Essential PI obtained!");
+  // simplify_row_dominance();
+  // simplify_column_dominance();
   petricks_method();
+  logger_->trace("Finished with petricks!");
 
   return convert_to_minterm_map();
 }
@@ -48,24 +50,31 @@ void QM::PrimeImplicants::get_essential_pi()
       removable_minterms.push_back(map.first);
     }
 
+    // TODO: Fix this
     // column dominance
-    for (auto& other_terms : pi_table_)
-    {
-      if (other_terms == map || std::find(removable_minterms.begin(), removable_minterms.end(),
-                                          other_terms.first) != removable_minterms.end())
-      {
-        continue;
-      }
-      std::vector<std::pair<QM::bin, bool>> cover_list;
-      // essentially find if one cover list is a subset of the other
-      std::copy_if(other_terms.second.begin(), other_terms.second.end(),
-                   std::back_inserter(cover_list),
-                   [&](const auto& val) { return val.second && map.second[val.first]; });
-      if (cover_list.size() == num_covers.size())
-      {
-        essential_pi_.emplace(num_covers[0].first);
-      }
-    }
+    // for (auto& other_terms : pi_table_)
+    // {
+    //   if (other_terms == map || std::find(removable_minterms.begin(), removable_minterms.end(),
+    //                                       other_terms.first) != removable_minterms.end())
+    //   {
+    //     continue;
+    //   }
+    //   std::vector<std::pair<QM::bin, bool>> cover_list;
+    //   // essentially find if one cover list is a subset of the other
+    //   std::copy_if(other_terms.second.begin(), other_terms.second.end(),
+    //                std::back_inserter(cover_list),
+    //                [&](const auto& val) { return val.second && map.second[val.first]; });
+    //   if (cover_list.size() == num_covers.size())
+    //   {
+    //     std::string dbg;
+    //     for (const auto& bit : num_covers[0].first)
+    //     {
+    //       dbg += std::to_string(bit);
+    //     }
+    //     logger_->trace(dbg);
+    //     essential_pi_.emplace(num_covers[0].first);
+    //   }
+    // }
   }
 
   // row dominance here? or maybe above loop (add another for loop iterating through pi table again)
@@ -94,6 +103,13 @@ void QM::PrimeImplicants::get_essential_pi()
 // maybe not needed if its better to do while finding epi
 void QM::PrimeImplicants::simplify_row_dominance()
 {
+  // if (pi_table_.size() == 0)
+  // {
+  //   return;
+  // }
+  // for (const auto& col : pi_table_.begin()->second)
+  // {
+  // }
 }
 
 // also may be able to do while finding epi
@@ -108,12 +124,25 @@ void QM::PrimeImplicants::petricks_method()
   {
     return;
   }
-  // maybe first create a map of pi to int "names"
+  // the initial equation is created correctly
   std::map<uint64_t, QM::bin> int_to_bin;
   std::map<QM::bin, uint64_t> bin_to_int;
   uint64_t new_name = 0;
   for (const auto& implicant : pi_table_.begin()->second)
   {
+    std::string str;
+    for (auto& bin : implicant.first)
+    {
+      if (bin == QM::States::dc)
+      {
+        str += '-';
+      }
+      else
+      {
+        str += std::to_string(bin);
+      }
+    }
+    logger_->debug("Mapping: " + std::to_string(new_name) + ", " + str);
     int_to_bin.emplace(new_name, implicant.first);
     bin_to_int.emplace(implicant.first, new_name);
     new_name += 1;
@@ -124,12 +153,14 @@ void QM::PrimeImplicants::petricks_method()
   for (const auto& term : pi_table_)
   {
     std::set<std::set<uint64_t>> single_sum;
+    logger_->trace("sum");
     for (const auto& implicant : term.second)
     {
       if (!implicant.second)
       {
         continue;
       }
+      logger_->trace("adding term: " + std::to_string(bin_to_int[implicant.first]));
       std::set<uint64_t> int_sum;
       int_sum.emplace(bin_to_int[implicant.first]);
       single_sum.emplace(int_sum);
@@ -138,12 +169,19 @@ void QM::PrimeImplicants::petricks_method()
   }
 
   // reduce equation to sop
+  logger_->trace("Getting SOP");
   const auto sop_eq = pos_to_sop(equation);
+  logger_->trace("SOP obtained");
   // now pick the lowest terms
-  std::sort(sop_eq.begin(), sop_eq.end(),
-            [](const std::set<uint64_t>& a, const std::set<uint64_t>& b)
-            { return a.size() < b.size(); });
-  auto min_size = sop_eq.begin()->size();
+  uint64_t min_size = ULONG_MAX;
+  for (const auto& term : sop_eq)
+  {
+    if (term.size() < min_size)
+    {
+      min_size = term.size();
+    }
+  }
+  logger_->trace("Min size: " + std::to_string(min_size));
   std::vector<std::set<uint64_t>> smallest_terms;
   for (auto& small_term : sop_eq)
   {
@@ -214,14 +252,22 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
   }
   if (equation.size() == 1)
   {
+    logger_->trace("Final EQ reached: " + std::to_string(equation[0].size()));
     return equation[0];
   }
 
+  logger_->trace("number of sums left to multiply: " + std::to_string(equation.size()));
   auto sum_one = equation.begin();
-  auto sum_two = sum_one++;
+  auto sum_two = std::next(sum_one);
   std::vector<std::set<std::set<uint64_t>>> new_equation;
-  while (sum_two != equation.end())
+  while (sum_one != equation.end())
   {
+    if (sum_two == equation.end())
+    {
+      logger_->trace("Odd num");
+      new_equation.push_back(*sum_one);
+      break;
+    }
     // combine two terms
     // for every term in old eq
     std::set<std::set<uint64_t>> new_sum;
@@ -233,6 +279,12 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
         std::set<uint64_t> new_term;
         new_term.insert(term_one.begin(), term_one.end());
         new_term.insert(term_two.begin(), term_two.end());
+        std::string dbg;
+        for (auto& lit : new_term)
+        {
+          dbg += std::to_string(lit) + " ";
+        }
+        logger_->trace(dbg);
         new_sum.emplace(new_term);
       }
     }
@@ -243,13 +295,25 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
     {
       for (const auto& term_two : new_sum)
       {
+        if (term_one == term_two)
+        {
+          continue;
+        }
         bool term_one_larger = (term_one.size() >= term_two.size());
         auto& larger = term_one_larger ? term_one : term_two;
         auto& smaller = term_one_larger ? term_two : term_one;
+        logger_->trace(std::to_string(larger.size()));
+        logger_->trace(std::to_string(smaller.size()));
 
         // using includes from algorithm header to find a subset
         if (std::includes(larger.begin(), larger.end(), smaller.begin(), smaller.end()))
         {
+          std::string dbg = "Remove: ";
+          for (auto& lit : larger)
+          {
+            dbg += std::to_string(lit) + " ";
+          }
+          logger_->trace(dbg);
           remove_list.push_back(larger);
         }
       }
@@ -261,10 +325,10 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
     }
 
     new_equation.push_back(new_sum);
-    sum_one = sum_two++;
+    sum_one = std::next(sum_two);
     if (sum_one != equation.end())
     {
-      sum_two = sum_one++;
+      sum_two = std::next(sum_one);
     }
     else
     {

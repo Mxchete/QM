@@ -6,7 +6,7 @@
 #include "IO/file_reader.hpp"
 #include "IO/file_reader_factory.hpp"
 #include "IO/logger.hpp"
-#include "IO/pla_writer.hpp"
+// #include "IO/pla_writer.hpp"
 #include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"
 #include "QM/qm_process_handler.hpp"
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     QM::QMProcessHandler qm_processor(map, logger);
 
     QM::sMintermMap final_product = qm_processor.process();
-    IO::File::PlaWriter out_file(output_file, logger);
+    // IO::File::PlaWriter out_file(output_file, logger);
     logger->info("Program has successfully finished");
     return EXIT_SUCCESS;
   }

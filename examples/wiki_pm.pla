@@ -1,0 +1,13 @@
+# Adapted from wikipedia page example for Petrick's Method
+.i 3
+.o 1
+.ilb A B C
+.ob F
+000 1
+001 1
+010 1
+101 1
+110 1
+111 1
+.e
+
