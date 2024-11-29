@@ -187,11 +187,12 @@ void QM::PrimeImplicants::petricks_method()
   {
     if (small_term.size() > min_size)
     {
-      break;
+      continue;
     }
     smallest_terms.push_back(small_term);
   }
 
+  logger_->trace("Smallest terms found: " + std::to_string(smallest_terms.size()));
   std::set<uint64_t> selection = *smallest_terms.begin();
   uint64_t lowest_num_literals = ULLONG_MAX;
   for (const auto& potential_selection : smallest_terms)
@@ -238,6 +239,7 @@ void QM::PrimeImplicants::petricks_method()
   // push all prime implicants from the smallest term
   for (const auto& implicant_int : selection)
   {
+    logger_->trace(std::to_string(implicant_int) + " ");
     const auto& bin_rep = int_to_bin[implicant_int];
     essential_pi_.emplace(bin_rep);
   }
