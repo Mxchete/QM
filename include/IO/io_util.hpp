@@ -1,6 +1,7 @@
 #ifndef IO_UTIL_HPP_
 #define IO_UTIL_HPP_
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
@@ -42,7 +43,20 @@ class IOUtil
 
   static void error_handler(Error e)
   {
-    std::cout << "IO_PLACEHOLDER_ERR";
+    if (e == bad_filetype)
+    {
+      std::cout << "Input file must be in PLA format!" << std::endl;
+    }
+    else if (e == unexpected_eof)
+    {
+      std::cout << "Unexpected EOF" << std::endl;
+    }
+    else if (e == malformed_file)
+    {
+      std::cout << "Error in input file, FileReader cannot parse" << std::endl;
+    }
+
+    exit(EXIT_FAILURE);
   }
 };
 }  // namespace IO

@@ -1,4 +1,6 @@
 #include "IO/pla_reader.hpp"
+#include <string>
+#include "IO/io_util.hpp"
 
 // implementation of read_line for pla reader
 bool IO::File::PlaReader::read_line(const std::string& line)
@@ -29,9 +31,15 @@ bool IO::File::PlaReader::read_line(const std::string& line)
   {
     input_labels_provided_ = true;
     std::string input;
+    uint64_t size = 0;
     while (iss >> input)
     {
       input_labels_.push_back(input);
+      size += 1;
+    }
+    if (num_inputs_ == 0)
+    {
+      num_inputs_ = size;
     }
     logger_->trace("PLAReader::Received inputs of size: " + std::to_string(input_labels_.size()));
     minterm_dc_map_->add_inputs(input_labels_);
@@ -84,6 +92,13 @@ bool IO::File::PlaReader::read_line(const std::string& line)
     }
     // term & whether it produces 1 or dc
     std::string term = token;
+    if (term.size() != num_inputs_)
+    {
+      logger_->fatal("Received term with: " + std::to_string(term.size()) +
+                     " literals. Expected Size: " + std::to_string(num_inputs_));
+      logger_->fatal("Term: " + term);
+      IOUtil::error_handler(IOUtil::Error::malformed_file);
+    }
     std::string out;
     iss >> out;
     // get expanded term (remove dc)

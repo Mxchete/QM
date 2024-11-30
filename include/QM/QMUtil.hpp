@@ -64,7 +64,7 @@ class QMUtil
           completed_term.push_back('1' + substr);
           break;
         case States::invalid_state:
-          throw_error(Error::invalid_minterm);
+          error_handler(Error::invalid_minterm);
           break;
       }
     }
@@ -145,13 +145,22 @@ class QMUtil
 
   enum Error
   {
-    invalid_map_state,
-    invalid_minterm
+    invalid_minterm,
+    prime_implicant_proc_err
   };
 
-  static void throw_error(Error e)
+  static void error_handler(Error e)
   {
-    std::cout << "QM_PLACEHOLDER_ERR";
+    if (e == invalid_minterm)
+    {
+      std::cout << "Error when evaluating bit state for minterm" << std::endl;
+    }
+    else if (e == prime_implicant_proc_err)
+    {
+      std::cout << "Error with processing prime implicants" << std::endl;
+    }
+
+    exit(EXIT_FAILURE);
   }
 };
 }  // namespace QM

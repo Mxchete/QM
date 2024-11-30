@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include "QM/QMUtil.hpp"
 #include "QM/minterm_map.hpp"
 #include "QM/types.hpp"
 
@@ -215,6 +216,7 @@ void QM::PrimeImplicants::petricks_method()
         catch (...)
         {
           logger_->fatal("Could not get literals of term");
+          QM::QMUtil::error_handler(QM::QMUtil::Error::prime_implicant_proc_err);
         }
       }
     }
@@ -249,6 +251,7 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
   if (equation.size() == 0)
   {
     logger_->fatal("Empty equation in petrick's method!");
+    QM::QMUtil::error_handler(QM::QMUtil::Error::prime_implicant_proc_err);
   }
   // we have found the SOP equation
   if (equation.size() == 1)
