@@ -53,7 +53,7 @@ class PlaWriter : public FileWriter<QM::sMintermMap>
     }
     result.pop_back();
     result += "\n";
-    result += ".olb " + raw_object->output() + "\n";
+    result += ".ob " + raw_object->output() + "\n";
     result += ".p " + std::to_string(raw_object->num_terms()) + "\n";
     // print all simplified minterms
     for (const auto& minterm : raw_object->get())
