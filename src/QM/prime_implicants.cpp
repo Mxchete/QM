@@ -71,7 +71,6 @@ void QM::PrimeImplicants::get_essential_pi()
       if (cover_list.size() == num_covers.size())
       {
         // we can remove dominated terms
-        // essential_pi_.emplace(num_covers[0].first);
         removable_minterms.push_back(other_terms.first);
       }
     }
