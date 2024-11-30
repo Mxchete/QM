@@ -1,15 +1,11 @@
-#include <fstream>
-// #include <memory>
-// #include <sstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <vector>
-#include "IO/io_util.hpp"
-#include "IO/logger.hpp"
-
 #ifndef FILE_READER_HPP_
 #define FILE_READER_HPP_
+
+#include <fstream>
+#include <memory>
+#include <string>
+#include "IO/io_util.hpp"
+#include "IO/logger.hpp"
 
 namespace IO
 {
@@ -21,6 +17,8 @@ class FileReader
  public:
   virtual ~FileReader() = default;
 
+  // generic function for reading file, specifies how file input should be read in for all file
+  // readers
   T read_file()
   {
     std::ifstream file(filename_);
@@ -43,10 +41,12 @@ class FileReader
     }
 
     file.close();
-    return process();  // Returns the processed data
+    // Returns the processed data
+    return process();
   }
 
  protected:
+  // constructor to set variables
   explicit FileReader(const std::string& filename, std::shared_ptr<IO::Logger> logger)
       : filename_(filename), logger_(std::move(logger))
   {
@@ -57,9 +57,11 @@ class FileReader
   std::shared_ptr<IO::Logger> logger_;
   uint64_t line_num_ = 0;
 
+  // virtual functions that should be overwritten for classes that inherit from this class
   virtual bool read_line(const std::string& line) = 0;
   virtual T process() = 0;
 };
 }  // namespace File
 }  // namespace IO
-#endif
+
+#endif  // FILE_READER_HPP_

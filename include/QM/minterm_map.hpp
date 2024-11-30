@@ -1,10 +1,8 @@
 #ifndef QM_MINTERM_MAP_
 #define QM_MINTERM_MAP_
 
-#include <algorithm>
 #include <cmath>
 #include <cstdint>
-// #include <iostream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -25,6 +23,7 @@ class MintermMap
   {
   }
 
+  // constructor with logger object
   MintermMap(std::shared_ptr<IO::Logger> logger) : logger_(std::move(logger))
   {
   }
@@ -33,26 +32,31 @@ class MintermMap
   {
   }
 
+  // get number of terms
   inline uint64_t size()
   {
     return map_.size();
   }
 
+  // get number of inputs
   inline uint64_t input_size()
   {
     return input_.size();
   }
 
+  // add inputs to map
   inline void add_inputs(const std::vector<std::string>& inputs)
   {
     input_ = inputs;
   }
 
+  // add output
   inline void set_output(const std::string& output)
   {
     output_ = output;
   }
 
+  // add onset given in form of vector of integers each integer will be represented as binary term
   inline bool fill_onset(std::vector<uint64_t>& onset)
   {
     bool success = true;
@@ -65,6 +69,7 @@ class MintermMap
     return success;
   }
 
+  // add a single term to onset
   inline bool add_onset_term(uint64_t int_val, const QM::bin& bin_rep)
   {
     bool success = map_.emplace(int_val, bin_rep).second;
@@ -72,21 +77,26 @@ class MintermMap
     return success;
   }
 
+  // get the underlying map
   inline std::unordered_map<uint64_t, QM::bin> get()
   {
     return std::unordered_map<uint64_t, QM::bin>(map_);
   }
 
+  // get underlying inputs
   inline std::vector<std::string> inputs()
   {
     return input_;
   }
 
+  // get underlying output
   inline std::string output()
   {
     return output_;
   }
 
+  // get number of terms (not sure how this is different from size(), but its too much work to
+  // change now)
   inline uint64_t num_terms()
   {
     return num_terms_;

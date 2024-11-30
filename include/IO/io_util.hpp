@@ -1,7 +1,6 @@
 #ifndef IO_UTIL_HPP_
 #define IO_UTIL_HPP_
 
-#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -10,12 +9,6 @@ namespace IO
 class IOUtil
 {
  public:
-  static uint64_t stoi(std::string& str)
-  {
-    std::cout << "str to convert: " << str << std::endl;
-    uint64_t converted = stoi(str);
-    return converted;
-  }
   enum FileType
   {
     blif,
@@ -54,4 +47,4 @@ class IOUtil
 };
 }  // namespace IO
 
-#endif
+#endif  // IO_UTIL_HPP_

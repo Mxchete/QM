@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <map>
-#include <unordered_map>
 #include <vector>
 
 namespace QM
@@ -24,4 +23,4 @@ using dual_list = std::map<combined_terms, bin>;
 using tabular_terms = std::map<uint64_t, combined_list>;
 }  // namespace QM
 
-#endif
+#endif  // QM_TYPES_HPP_

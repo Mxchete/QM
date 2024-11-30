@@ -3,24 +3,22 @@
 #include <climits>
 #include <cstdint>
 #include <memory>
-#include <unordered_map>
-#include "QM/QMUtil.hpp"
 #include "QM/minterm_map.hpp"
 #include "QM/types.hpp"
 
+// solve gets essential pi & then performs petricks method, return converted essential primes
 QM::sMintermMap QM::PrimeImplicants::solve()
 {
   logger_->trace("PrimeImplicants::Table:");
   get_essential_pi();
   logger_->trace("Essential PI obtained!");
-  // simplify_row_dominance();
-  // simplify_column_dominance();
   petricks_method();
   logger_->trace("Finished with petricks!");
 
   return convert_to_minterm_map();
 }
 
+// find if prime implicant covers a given minterm
 bool QM::PrimeImplicants::covers(const std::pair<uint64_t, QM::bin>& num_one,
                                  const QM::dual_rep& num_two)
 {
@@ -30,10 +28,12 @@ bool QM::PrimeImplicants::covers(const std::pair<uint64_t, QM::bin>& num_one,
     return false;
   }
 
+  // num_one is minterm, num_two is prime, if num_one is in num_two, it is covered by num_two
   if (std::find(num_two.first.begin(), num_two.first.end(), num_one.first) != num_two.first.end())
   {
     return true;
   }
+  // otherwise, it is not covered
   return false;
 }
 
@@ -43,15 +43,16 @@ void QM::PrimeImplicants::get_essential_pi()
   for (auto& map : pi_table_)
   {
     std::vector<std::pair<QM::bin, bool>> num_covers;
+    // get number of implicants that cover this minterm
     std::copy_if(map.second.begin(), map.second.end(), std::back_inserter(num_covers),
                  [](const auto& val) { return val.second; });
+    // if only one, this is an essential prime
     if (num_covers.size() == 1)
     {
       essential_pi_.emplace(num_covers[0].first);
       removable_minterms.push_back(map.first);
     }
 
-    // TODO: Fix this
     // column dominance
     for (auto& other_terms : pi_table_)
     {
@@ -68,6 +69,7 @@ void QM::PrimeImplicants::get_essential_pi()
                      ", num: " + std::to_string(num_covers.size()));
       if (cover_list.size() == num_covers.size())
       {
+        // we can remove dominated terms
         essential_pi_.emplace(num_covers[0].first);
         removable_minterms.push_back(map.first);
       }
@@ -75,6 +77,7 @@ void QM::PrimeImplicants::get_essential_pi()
   }
 
   logger_->trace("Old size: " + std::to_string(pi_table_.size()));
+  // remove terms we marked
   for (const auto& removable : removable_minterms)
   {
     pi_table_.erase(removable);
@@ -86,13 +89,13 @@ void QM::PrimeImplicants::get_essential_pi()
   {
     for (const auto& removable_pi : essential_pi_)
     {
+      // remove implicants we marked
       minterm.second.erase(removable_pi);
     }
   }
   logger_->trace("New Number of implicants: " + std::to_string(pi_table_.begin()->second.size()));
 }
 
-// probably still need
 void QM::PrimeImplicants::petricks_method()
 {
   if (pi_table_.size() == 0 || pi_table_.begin()->second.size() == 0)
@@ -100,43 +103,32 @@ void QM::PrimeImplicants::petricks_method()
     return;
   }
 
-  logger_->trace("PI TABLE SZ: " + std::to_string(pi_table_.begin()->second.size()));
+  // edge case where only 1 prime implicant is left
   if (pi_table_.begin()->second.size() == 1)
   {
     essential_pi_.emplace(pi_table_.begin()->second.begin()->first);
     return;
   }
-  // the initial equation is created correctly
   std::map<uint64_t, QM::bin> int_to_bin;
   std::map<QM::bin, uint64_t> bin_to_int;
   uint64_t new_name = 0;
+  // map implicants to "names" for petrick
   for (const auto& implicant : pi_table_.begin()->second)
   {
-    std::string str;
-    for (auto& bin : implicant.first)
-    {
-      if (bin == QM::States::dc)
-      {
-        str += '-';
-      }
-      else
-      {
-        str += std::to_string(bin);
-      }
-    }
-    logger_->debug("Mapping: " + std::to_string(new_name) + ", " + str);
     int_to_bin.emplace(new_name, implicant.first);
     bin_to_int.emplace(implicant.first, new_name);
     new_name += 1;
   }
 
   // create an equation in POS form
+  // inner set holds anding of literals, i.e. AB'
+  // outer set is ORing of literals, i.e. A+B
+  // vector is anding of ORed literals, i.e. (A+B)(B+C)
   std::vector<std::set<std::set<uint64_t>>> equation;
   for (const auto& term : pi_table_)
   {
     std::set<std::set<uint64_t>> single_sum;
     logger_->trace("sum");
-    // TODO: Error somewhere in here
     for (const auto& implicant : term.second)
     {
       if (!implicant.second)
@@ -167,6 +159,7 @@ void QM::PrimeImplicants::petricks_method()
   }
   logger_->trace("Min size: " + std::to_string(min_size));
   std::vector<std::set<uint64_t>> smallest_terms;
+  // get all terms whose size is lowest
   for (auto& small_term : sop_eq)
   {
     if (small_term.size() > min_size)
@@ -179,8 +172,10 @@ void QM::PrimeImplicants::petricks_method()
   logger_->trace("Smallest terms found: " + std::to_string(smallest_terms.size()));
   std::set<uint64_t> selection = *smallest_terms.begin();
   uint64_t lowest_num_literals = ULLONG_MAX;
+  // select the term from the smallest terms that has the fewest number of literals
   for (const auto& potential_selection : smallest_terms)
   {
+    // double map since for each literal A there are two literals: A and A'
     std::vector<bool> literal_has_appeared(num_inputs_, false);
     std::vector<bool> inv_literal_has_appeared(num_inputs_, false);
     for (const auto& Px : potential_selection)
@@ -192,11 +187,13 @@ void QM::PrimeImplicants::petricks_method()
         {
           if (bin_rep[i] == QM::States::one)
           {
+            // mark literal as true if appears as 1
             literal_has_appeared[i] = true;
           }
           else if (bin_rep[i] == QM::States::zero)
           {
-            inv_literal_has_appeared[i] = false;
+            // mark as true for inv if appears as 0
+            inv_literal_has_appeared[i] = true;
           }
         }
         catch (...)
@@ -213,6 +210,7 @@ void QM::PrimeImplicants::petricks_method()
         std::count_if(inv_literal_has_appeared.begin(), inv_literal_has_appeared.end(),
                       [&](const auto& e) { return e; });
 
+    // if new number of literals is lower, choose this
     if (number_of_literals < lowest_num_literals)
     {
       lowest_num_literals = number_of_literals;
@@ -236,18 +234,21 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
   {
     logger_->fatal("Empty equation in petrick's method!");
   }
+  // we have found the SOP equation
   if (equation.size() == 1)
   {
     logger_->trace("Final EQ reached: " + std::to_string(equation[0].size()));
     return equation[0];
   }
 
+  // compare sets of two terms together
   logger_->trace("number of sums left to multiply: " + std::to_string(equation.size()));
   auto sum_one = equation.begin();
   auto sum_two = std::next(sum_one);
   std::vector<std::set<std::set<uint64_t>>> new_equation;
   while (sum_one != equation.end())
   {
+    // break if there are an odd number of sums
     if (sum_two == equation.end())
     {
       logger_->trace("Odd num");
@@ -293,11 +294,13 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
       }
     }
 
+    // remove larger terms that can be eliminated via boolean algebra
     for (const auto& removable : remove_list)
     {
       new_sum.erase(removable);
     }
 
+    // add this sum, then increment which terms we look at
     new_equation.push_back(new_sum);
     sum_one = std::next(sum_two);
     if (sum_one != equation.end())
@@ -310,6 +313,7 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
     }
   }
 
+  // recursively iterate until we have reached SOP form
   return pos_to_sop(new_equation);
 }
 
@@ -317,6 +321,7 @@ QM::sMintermMap QM::PrimeImplicants::convert_to_minterm_map()
 {
   QM::sMintermMap result = std::make_shared<QM::MintermMap>(input_, output_, logger_);
   int i = 0;
+  // just adding to onset with i since we need to tie each minterm to an int
   for (const auto& new_term : essential_pi_)
   {
     result->add_onset_term(i, new_term);

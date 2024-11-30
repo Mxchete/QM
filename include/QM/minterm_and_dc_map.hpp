@@ -1,16 +1,14 @@
 #ifndef QM_MINTERM_DC_MAP_
 #define QM_MINTERM_DC_MAP_
 
-#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <unordered_set>
 #include <vector>
-#include "QM/QMUtil.hpp"
 #include "QM/minterm_map.hpp"
 
+// simple container for storing minterms & dc terms
 namespace QM
 {
 class MintermDCMap
@@ -69,4 +67,4 @@ class MintermDCMap
 using sBooleanFunction = std::shared_ptr<MintermDCMap>;
 }  // namespace QM
 
-#endif
+#endif  // QM_MINTERM_DC_MAP_

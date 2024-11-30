@@ -1,10 +1,8 @@
 #ifndef QM_PROCESSOR_HPP_
 #define QM_PROCESSOR_HPP_
 
-#include <map>
 #include <mutex>
 #include <optional>
-#include <set>
 #include "IO/logger.hpp"
 #include "QM/minterm_and_dc_map.hpp"
 #include "QM/minterm_map.hpp"
@@ -42,4 +40,4 @@ class QMProcessHandler
 };
 }  // namespace QM
 
-#endif
+#endif  // QM_PROCESSOR_HPP_

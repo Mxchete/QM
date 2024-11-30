@@ -28,6 +28,7 @@ class PlaReader : public FileReader<QM::sBooleanFunction>
  protected:
   bool read_line(const std::string& line) override;
 
+  // return the minterm & dc term map that was created
   inline QM::sBooleanFunction process() override
   {
     return minterm_dc_map_;
@@ -47,4 +48,4 @@ class PlaReader : public FileReader<QM::sBooleanFunction>
 }  // namespace File
 }  // namespace IO
 
-#endif
+#endif  // PLA_READER_HPP_

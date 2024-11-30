@@ -1,12 +1,12 @@
+#ifndef FILE_WRITER_HPP_
+#define FILE_WRITER_HPP_
+
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
 #include "IO/io_util.hpp"
 #include "IO/logger.hpp"
-
-#ifndef FILE_WRITER_HPP_
-#define FILE_WRITER_HPP_
 
 namespace IO
 {
@@ -61,4 +61,4 @@ class FileWriter
 }  // namespace File
 }  // namespace IO
 
-#endif
+#endif  // FILE_WRITER_HPP_

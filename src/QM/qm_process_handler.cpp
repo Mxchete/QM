@@ -17,7 +17,7 @@ QM::sMintermMap QM::QMProcessHandler::process()
   // Generates the first stage of the PI table, before essential PI are selected
   QM::PrimeImplicants pi_table = QM::QMProcessHandler::generate_pi_table();
 
-  // TODO: take essential PI table from generator & solve (using Petricks?)
+  // solve the pi table, produces minterms of simplified sop form
   QM::sMintermMap sop(pi_table.solve());
 
   // return the final set of minterms that make up the optimized SOP form
@@ -65,6 +65,7 @@ QM::combined_list QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
   }
   logger_->debug("Created all threads");
 
+  // join all threads
   for (auto& thread : processing_threads)
   {
     thread.join();
@@ -72,6 +73,8 @@ QM::combined_list QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
   logger_->debug("All threads rejoined");
 
   QM::combined_list finished_table;
+  // recursively call find_pi to continue iterating through tabular method until we can't combine
+  // any more
   if (new_table.size() != 0)
   {
     finished_table = find_pi(new_table);
@@ -88,12 +91,14 @@ QM::combined_list QM::QMProcessHandler::find_pi(QM::tabular_terms& current_table
   }
   logger_->debug("Created all threads for used terms");
 
+  // join all threads for adding used terms
   for (auto& thread : used_terms_processing_threads)
   {
     thread.join();
   }
   logger_->debug("All threads rejoined");
 
+  // returns the result of combined terms + terms we could not combine
   return finished_table;
 }
 
@@ -207,14 +212,18 @@ void QM::QMProcessHandler::thread_processing(
     // for each term in next number of ones
     for (auto& next_term : next_terms_for_num_ones->second)
     {
+      // try to combine
       std::optional<QM::dual_rep> combined = combine(comparison_term, next_term);
       if (!combined)
       {
         continue;
       }
+      // get number of ones in term
       auto new_num_ones = QM::QMUtil::get_num_ones_from_bin(combined->second);
+      // mark terms as used
       local_used.push_back(comparison_term);
       local_used.push_back(next_term);
+      // push back unique combined terms into table
       if (std::count_if(local_table[new_num_ones].begin(), local_table[new_num_ones].end(),
                         [&](const auto& e) { return e.second == combined->second; }) == 0)
       {
@@ -228,12 +237,14 @@ void QM::QMProcessHandler::thread_processing(
     }
   }
 
+  // push back used terms, we should lock here since we access shared memory
   for (auto& used : local_used)
   {
     std::lock_guard<std::mutex> lock(thread_lock_);
     used_terms.push_back(used);
   }
 
+  // push back terms from our local table back into shared table (need to lock)
   for (auto& set_from_num_ones : local_table)
   {
     for (auto& term : set_from_num_ones.second)
@@ -258,6 +269,7 @@ void QM::QMProcessHandler::process_used_terms(
     if (std::count_if(used_terms.begin(), used_terms.end(),
                       [&](const auto& e) { return e.second == comparison_term.second; }) == 0)
     {
+      // this is the only place we write to shared memory in this function
       std::lock_guard<std::mutex> lock(thread_lock_);
       finished_table.push_back(comparison_term);
     }

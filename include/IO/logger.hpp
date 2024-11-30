@@ -25,6 +25,7 @@ class Logger
     FATAL
   };
 
+  // convert a string into a log level
   static LogLevel get_log_level(std::string& lvl_str)
   {
     for (auto& c : lvl_str)
@@ -57,10 +58,12 @@ class Logger
     }
   }
 
+  // default constructor for stdout
   Logger(LogLevel lvl = LogLevel::INFO) : out_(&std::cout), log_level_(lvl)
   {
   }
 
+  // constructor where logs are directed to file
   Logger(const std::string& filename, LogLevel lvl = LogLevel::INFO) : log_level_(lvl)
   {
     file_ = std::make_unique<std::ofstream>(filename);
@@ -133,14 +136,17 @@ class Logger
   LogLevel log_level_;
   std::mutex write_lock_;
 
+  // inner log function that all logs use
   inline void log(const std::string& level, const std::string& message)
   {
+    // get the current UTC time
     auto now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
 
     std::tm utc_time = *std::gmtime(&now_c);
     if (out_)
     {
+      // lock here to prevent overlapping writes
       std::lock_guard<std::mutex> lock(write_lock_);
       *out_ << "[" << level << "][" << std::put_time(&utc_time, "%Y-%m-%d %H:%M:%S") << "] "
             << message << std::endl;
