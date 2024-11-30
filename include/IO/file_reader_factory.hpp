@@ -24,6 +24,7 @@ class FileReaderFactory
     {
       case IOUtil::FileType::blif:
         // Note for implementation: blif does not need to be supported, only PLA
+        logger->fatal("Blif filetypes are not supported!");
         IOUtil::error_handler(IOUtil::Error::bad_filetype);
         // return std::make_unique<BlifReader>(filename, logger);
         break;
@@ -39,4 +40,4 @@ class FileReaderFactory
 }  // namespace File
 }  // namespace IO
 
-#endif
+#endif  // FILE_READER_FACTORY_HPP_

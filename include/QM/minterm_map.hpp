@@ -60,12 +60,6 @@ class MintermMap
     for (uint64_t term : onset)
     {
       QM::bin in_binary(QMUtil::get_states(term, input_.size()));
-      std::string dbg;
-      for (auto& state : in_binary)
-      {
-        dbg += std::to_string(state);
-      }
-      logger_->trace("For num: " + std::to_string(term) + ", bin: " + dbg);
       success &= map_.emplace(term, in_binary).second;
     }
     return success;

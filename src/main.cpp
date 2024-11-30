@@ -42,8 +42,10 @@ void print_help()
                "stdout only"
             << std::endl;
 }
+
 int main(int argc, char** argv)
 {
+  // Program name & build information
   std::cout << ">>>> QM SIMPLIFIER <<<<" << std::endl;
   std::cout << "Built on: " << __DATE__ << " " << __TIME__ << std::endl;
   int idx;
@@ -56,6 +58,7 @@ int main(int argc, char** argv)
   // turn off getopt error message
   opterr = 1;
 
+  // iterate through all arguments
   while (iarg != -1)
   {
     iarg = getopt_long(argc, argv, "vhf:o:l:p:", longopts, &idx);
@@ -87,8 +90,10 @@ int main(int argc, char** argv)
     }
   }
 
+  // only run the program if input file was received
   if (filename)
   {
+    // create our logger object
     IO::Logger::LogLevel lvl = IO::Logger::get_log_level(log_level);
     std::shared_ptr<IO::Logger> logger;
     if (log_path != "")
@@ -100,19 +105,29 @@ int main(int argc, char** argv)
       logger = std::make_shared<IO::Logger>(lvl);
     }
     logger->info("Main::Logger successfully created");
+    // create file reader
     std::string file_name = argv[2];
     auto file_reader = IO::File::FileReaderFactory<QM::sBooleanFunction>::create(file_name, logger);
 
     logger->info("File reader object created");
 
+    // read file & get output as map of minterm & dc terms
     QM::sBooleanFunction map = file_reader->read_file();
+
+    // create object to handle processing
     QM::QMProcessHandler qm_processor(map, logger);
 
+    // process the map & create simplified map as output
     QM::sMintermMap final_product = qm_processor.process();
+    // create our writer output object
     IO::File::PlaWriter out_file =
         (output_file) ? IO::File::PlaWriter(output_file, logger) : IO::File::PlaWriter(logger);
+    // write out our simplified map
     out_file.write_file(final_product);
     logger->info("Program has successfully finished");
     return EXIT_SUCCESS;
   }
+
+  // return failure if no input filename was supplied
+  return EXIT_FAILURE;
 }

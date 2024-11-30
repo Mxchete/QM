@@ -265,12 +265,6 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
         std::set<uint64_t> new_term;
         new_term.insert(term_one.begin(), term_one.end());
         new_term.insert(term_two.begin(), term_two.end());
-        std::string dbg;
-        for (auto& lit : new_term)
-        {
-          dbg += std::to_string(lit) + " ";
-        }
-        logger_->trace(dbg);
         new_sum.emplace(new_term);
       }
     }
@@ -294,12 +288,6 @@ std::set<std::set<uint64_t>> QM::PrimeImplicants::pos_to_sop(
         // using includes from algorithm header to find a subset
         if (std::includes(larger.begin(), larger.end(), smaller.begin(), smaller.end()))
         {
-          std::string dbg = "Remove: ";
-          for (auto& lit : larger)
-          {
-            dbg += std::to_string(lit) + " ";
-          }
-          logger_->trace(dbg);
           remove_list.push_back(larger);
         }
       }
@@ -331,12 +319,6 @@ QM::sMintermMap QM::PrimeImplicants::convert_to_minterm_map()
   int i = 0;
   for (const auto& new_term : essential_pi_)
   {
-    std::string dbg;
-    for (auto& state : new_term)
-    {
-      dbg += std::to_string(state);
-    }
-    logger_->trace("add term: " + std::to_string(i) + ", " + dbg);
     result->add_onset_term(i, new_term);
     i += 1;
   }
