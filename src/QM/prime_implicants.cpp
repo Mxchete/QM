@@ -3,6 +3,7 @@
 #include <climits>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include "QM/minterm_map.hpp"
 #include "QM/types.hpp"
 
@@ -70,8 +71,8 @@ void QM::PrimeImplicants::get_essential_pi()
       if (cover_list.size() == num_covers.size())
       {
         // we can remove dominated terms
-        essential_pi_.emplace(num_covers[0].first);
-        removable_minterms.push_back(map.first);
+        // essential_pi_.emplace(num_covers[0].first);
+        removable_minterms.push_back(other_terms.first);
       }
     }
   }
@@ -94,6 +95,22 @@ void QM::PrimeImplicants::get_essential_pi()
     }
   }
   logger_->trace("New Number of implicants: " + std::to_string(pi_table_.begin()->second.size()));
+
+  logger_->debug("Current EPI");
+  for (const auto& term : essential_pi_)
+  {
+    std::string dbg;
+    for (const auto& state : term)
+    {
+      if (state == QM::States::dc)
+      {
+        dbg += '-';
+        continue;
+      }
+      dbg += std::to_string(state);
+    }
+    logger_->debug(dbg);
+  }
 }
 
 void QM::PrimeImplicants::petricks_method()
