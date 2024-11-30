@@ -50,8 +50,8 @@ int main(int argc, char** argv)
   std::cout << "Built on: " << __DATE__ << " " << __TIME__ << std::endl;
   int idx;
   int iarg = 0;
-  char* filename;
-  char* output_file;
+  char* filename = nullptr;
+  char* output_file = nullptr;
   std::string log_level = "INFO";
   std::string log_path = "";
 
