@@ -16,7 +16,7 @@ Once inside the container, run the following command to build:
 
 For building & running outside the container, just ensure that the required dependencies are available and the correct versions or above are available.
 
-Building and running the program on Eustis does work
+Building and running the program on Eustis does work. To build on Eustis, just run the build script without running the start_container script, since podman is not available on Eustis.
 
 - Note: This program was developed & tested on Linux, & there is no guarantee that it will compile on windows or MacOS
 
