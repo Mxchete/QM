@@ -106,8 +106,7 @@ int main(int argc, char** argv)
     }
     logger->info("Main::Logger successfully created");
     // create file reader
-    std::string file_name = argv[2];
-    auto file_reader = IO::File::FileReaderFactory<QM::sBooleanFunction>::create(file_name, logger);
+    auto file_reader = IO::File::FileReaderFactory<QM::sBooleanFunction>::create(filename, logger);
 
     logger->info("File reader object created");
 
